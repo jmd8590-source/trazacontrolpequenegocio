@@ -1,15 +1,17 @@
 /* ============================================================
-   TrazaControl — Layout System (Accessible & High Contrast)
-   Fully responsive: mobile, tablet, desktop + Theme support
-   ============================================================ */
-
-/* ============================================================
    App Shell
    ============================================================ */
+html, body {
+    height: 100%;
+    overflow: hidden;
+}
+
 .app-container {
     display: none;
-    min-height: 100vh;
+    height: 100vh;
+    width: 100vw;
     background: var(--bg-primary);
+    overflow: hidden;
 }
 
 .app-container.active {
@@ -17,22 +19,20 @@
 }
 
 /* ============================================================
-   Sidebar Navigation
+   Sidebar Navigation (Fixed Left Panel)
    ============================================================ */
 .sidebar {
     width: var(--sidebar-width);
     height: 100vh;
-    position: fixed;
-    top: 0;
-    left: 0;
     background: var(--bg-sidebar);
     border-right: 1px solid var(--border-medium);
     display: flex;
     flex-direction: column;
     z-index: var(--z-sticky);
-    transition: all var(--duration-slow) var(--ease-out);
-    overflow: hidden;
+    transition: width var(--duration-normal) var(--ease-out), transform var(--duration-slow) var(--ease-out);
+    flex-shrink: 0;
     box-shadow: var(--shadow-sm);
+    position: relative;
 }
 
 .sidebar-header {
@@ -311,19 +311,37 @@
 }
 
 /* ============================================================
-   Main Content Area
+   Main Content Area (Scrollable Center Panel)
    ============================================================ */
 .main-content {
-    margin-left: var(--sidebar-width);
     flex: 1;
-    min-height: 100vh;
-    transition: margin-left var(--duration-slow) var(--ease-out);
+    height: 100vh;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+    min-width: 0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-400) transparent;
+    transition: all var(--duration-slow) var(--ease-out);
 }
 
-.sidebar.collapsed ~ .main-content {
-    margin-left: var(--sidebar-collapsed-width);
+.main-content::-webkit-scrollbar {
+    width: 8px;
+    display: block;
+}
+
+.main-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.main-content::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: var(--radius-full);
+}
+
+.main-content::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
 }
 
 /* Top Header */
@@ -500,10 +518,11 @@
 /* Content Area */
 .content-area {
     flex: 1;
-    padding: var(--space-8);
-    max-width: 1440px;
+    padding: var(--space-6) var(--space-8);
+    max-width: 1400px;
     width: 100%;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 /* ============================================================

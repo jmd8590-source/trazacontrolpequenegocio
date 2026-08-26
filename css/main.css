@@ -102,35 +102,34 @@
     --space-8: 32px;
     --space-10: 40px;
     --space-12: 48px;
-    --space-16: 64px;
 
-    /* ---- Accessible Typography (Larger & Clearer) ---- */
+    /* ---- Calibrated Typography (Clear, Sharp & Readable) ---- */
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'SF Mono', Consolas, Menlo, monospace;
 
-    --text-xs: 0.8125rem;   /* 13px */
-    --text-sm: 0.9375rem;   /* 15px */
-    --text-base: 1.0625rem; /* 17px (High-readability body) */
-    --text-md: 1.125rem;    /* 18px */
-    --text-lg: 1.25rem;     /* 20px */
-    --text-xl: 1.4375rem;   /* 23px */
-    --text-2xl: 1.75rem;    /* 28px */
-    --text-3xl: 2.125rem;   /* 34px */
-    --text-4xl: 2.625rem;   /* 42px */
+    --text-xs: 0.75rem;     /* 12px */
+    --text-sm: 0.875rem;    /* 14px */
+    --text-base: 0.9375rem; /* 15px */
+    --text-md: 1rem;        /* 16px */
+    --text-lg: 1.125rem;    /* 18px */
+    --text-xl: 1.25rem;     /* 20px */
+    --text-2xl: 1.5rem;     /* 24px */
+    --text-3xl: 1.875rem;   /* 30px */
+    --text-4xl: 2.25rem;    /* 36px */
 
     --leading-tight: 1.25;
     --leading-normal: 1.5;
-    --leading-relaxed: 1.65;
+    --leading-relaxed: 1.6;
 
-    --tracking-tight: -0.022em;
+    --tracking-tight: -0.015em;
     --tracking-normal: 0;
-    --tracking-wide: 0.02em;
+    --tracking-wide: 0.01em;
 
     /* ---- Layout Dimensions ---- */
-    --sidebar-width: 270px;
-    --sidebar-collapsed-width: 84px;
-    --header-height: 72px;
-    --bottom-nav-height: 72px;
+    --sidebar-width: 250px;
+    --sidebar-collapsed-width: 76px;
+    --header-height: 64px;
+    --bottom-nav-height: 68px;
 
     /* ---- Z-Index Scale ---- */
     --z-dropdown: 1000;
