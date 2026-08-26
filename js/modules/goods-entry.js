@@ -216,11 +216,36 @@ const GoodsEntryModule = (function() {
         setupEvents(suppliers);
     }
 
+    async function populateSupplierSelect(preselectedSupplierId) {
+        const userId = Auth.getUserId();
+        const suppliers = await TrazaDB.getByUser('suppliers', userId);
+        const select = document.querySelector('#entry-form select[name="supplierId"]');
+        if (!select) return suppliers;
+
+        if (suppliers.length === 0) {
+            select.innerHTML = '<option value="">No hay proveedores dados de alta</option>';
+            return suppliers;
+        }
+
+        select.innerHTML = `<option value="">-- ${I18n.t('app.select_option')} --</option>` +
+            suppliers.map(s => `<option value="${s.id}" ${s.id === preselectedSupplierId ? 'selected' : ''}>${Utils.sanitize(s.name)}</option>`).join('');
+
+        if (preselectedSupplierId) select.value = preselectedSupplierId;
+        return suppliers;
+    }
+
     function setupEvents(suppliers) {
-        Utils.delegate(document.body, '#entry-add-btn, #entry-add-empty', 'click', () => {
+        Utils.delegate(document.body, '#entry-add-btn, #entry-add-empty', 'click', async () => {
             editingId = null;
+            const currentSuppliers = await populateSupplierSelect();
+            if (currentSuppliers.length === 0) {
+                Utils.showToast('warning', 'Primero debes añadir al menos un proveedor');
+                App.navigateTo('suppliers');
+                return;
+            }
             Utils.clearForm('entry-form');
             document.querySelector('#entry-form [name="date"]').value = Utils.todayISO();
+            document.querySelector('#entry-form [name="receivedBy"]').value = (Auth.getUser() && Auth.getUser().ownerName) || '';
             document.getElementById('entry-modal-title').textContent = I18n.t('goods_entry.new_entry');
             Utils.openModal('entry-modal');
         });

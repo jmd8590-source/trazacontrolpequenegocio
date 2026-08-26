@@ -89,11 +89,26 @@
     flex: 1;
     overflow-y: auto;
     padding: var(--space-3);
-    scrollbar-width: none;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-400) transparent;
 }
 
 .sidebar-nav::-webkit-scrollbar {
-    display: none;
+    width: 6px;
+    display: block;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+    background: var(--gray-300);
+    border-radius: var(--radius-full);
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-500);
 }
 
 .sidebar-section-label {
