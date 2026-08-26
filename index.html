@@ -39,8 +39,11 @@
          AUTH SCREEN (Login / Registration / Demo Entry)
          ============================================================ -->
     <div id="auth-screen" class="auth-screen">
-        <!-- Floating Language Selector on Auth Screen -->
-        <div class="auth-lang">
+        <!-- Floating Language Selector & Theme Toggle on Auth Screen -->
+        <div class="auth-top-bar">
+            <button class="theme-toggle-btn" id="auth-theme-toggle-btn" title="Modo Oscuro / Claro" aria-label="Cambiar tema">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+            </button>
             <div class="lang-selector">
                 <button class="lang-btn active" data-lang="es">ES</button>
                 <button class="lang-btn" data-lang="pt">PT</button>
@@ -225,6 +228,11 @@
                 </div>
 
                 <div class="top-header-right">
+                    <!-- Light / Dark Mode Toggle Button -->
+                    <button class="theme-toggle-btn" id="theme-toggle-btn" title="Modo Oscuro / Claro" aria-label="Cambiar tema">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                    </button>
+
                     <!-- Real-time Language Switcher ES / PT / EN -->
                     <div class="lang-selector">
                         <button class="lang-btn active" data-lang="es">ES</button>
@@ -235,7 +243,7 @@
                     <!-- Quick Notifications Bell -->
                     <div class="header-notifications">
                         <button class="notification-btn" onclick="App.navigateTo('dashboard')" aria-label="Notificaciones">
-                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2">
                                 <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                                 <path d="M13.73 21a2 2 0 01-3.46 0"/>
                             </svg>
