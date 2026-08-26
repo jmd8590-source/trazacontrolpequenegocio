@@ -1,0 +1,880 @@
+/* ============================================================
+   TrazaControl — Module-Specific Styles
+   Styles unique to individual functional modules
+   ============================================================ */
+
+/* ============================================================
+   Dashboard Module
+   ============================================================ */
+.dashboard-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-5);
+    margin-bottom: var(--space-8);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: var(--space-6);
+}
+
+.dashboard-chart-container {
+    position: relative;
+    height: 250px;
+    padding: var(--space-4) 0;
+}
+
+.dashboard-chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: var(--text-sm);
+}
+
+.activity-icon.temp { background: var(--primary-ultra-light); color: var(--primary); }
+.activity-icon.cleaning { background: var(--success-light); color: var(--success); }
+.activity-icon.incident { background: var(--danger-light); color: var(--danger); }
+.activity-icon.stock { background: var(--warning-light); color: var(--warning); }
+.activity-icon.entry { background: var(--info-light); color: var(--info); }
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-text {
+    font-size: var(--text-sm);
+    color: var(--text-primary);
+}
+
+.activity-time {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-top: 2px;
+}
+
+.alert-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    border-left: 3px solid;
+    font-size: var(--text-sm);
+}
+
+.alert-item.alert-danger { border-left-color: var(--danger); }
+.alert-item.alert-warning { border-left-color: var(--warning); }
+.alert-item.alert-info { border-left-color: var(--primary); }
+
+.quick-action-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+}
+
+.quick-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-5) var(--space-4);
+    background: var(--gray-50);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-out);
+    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.quick-action-btn:hover {
+    background: var(--primary-ultra-light);
+    border-color: var(--primary);
+    color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.quick-action-btn svg {
+    width: 28px;
+    height: 28px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .quick-action-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-kpis {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================================
+   Traceability Module
+   ============================================================ */
+.traceability-chain {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    overflow-x: auto;
+}
+
+.chain-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: var(--bg-card);
+    border: 2px solid var(--border-medium);
+    border-radius: var(--radius-lg);
+    min-width: 140px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.chain-node.active {
+    border-color: var(--primary);
+    background: var(--primary-ultra-light);
+}
+
+.chain-node-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-full);
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chain-node.active .chain-node-icon {
+    background: var(--primary);
+    color: white;
+}
+
+.chain-arrow {
+    width: 40px;
+    height: 2px;
+    background: var(--gray-300);
+    flex-shrink: 0;
+    position: relative;
+}
+
+.chain-arrow::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: -4px;
+    border: 5px solid transparent;
+    border-left: 6px solid var(--gray-300);
+}
+
+/* Allergen Grid */
+.allergen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--space-3);
+}
+
+.allergen-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-sm);
+    border: 1.5px solid var(--border-light);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    user-select: none;
+}
+
+.allergen-item:hover {
+    border-color: var(--border-strong);
+}
+
+.allergen-item.selected {
+    background: var(--warning-light);
+    border-color: var(--warning);
+    color: var(--warning-hover);
+}
+
+.allergen-item input[type="checkbox"] {
+    display: none;
+}
+
+/* Ingredient List */
+.ingredient-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.ingredient-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+}
+
+.ingredient-row .form-input,
+.ingredient-row .form-select {
+    flex: 1;
+    min-width: 0;
+}
+
+.ingredient-remove {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    transition: all var(--duration-fast) var(--ease-out);
+    flex-shrink: 0;
+}
+
+.ingredient-remove:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* ============================================================
+   Temperature Module
+   ============================================================ */
+.temp-points-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: var(--space-5);
+}
+
+.temp-point-card {
+    border-left: 4px solid;
+}
+
+.temp-point-card.in-range {
+    border-left-color: var(--success);
+}
+
+.temp-point-card.out-of-range {
+    border-left-color: var(--danger);
+}
+
+.temp-point-card.no-reading {
+    border-left-color: var(--gray-400);
+}
+
+.temp-current {
+    font-size: var(--text-4xl);
+    font-weight: 800;
+    line-height: 1;
+}
+
+.temp-range {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+}
+
+.temp-range-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.temp-range-indicator.ok { background: var(--success); }
+.temp-range-indicator.warn { background: var(--danger); }
+.temp-range-indicator.neutral { background: var(--gray-400); }
+
+/* ============================================================
+   Pest Control Module
+   ============================================================ */
+.pest-company-card {
+    background: linear-gradient(135deg, var(--gray-50) 0%, var(--bg-card) 100%);
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    padding: var(--space-6);
+}
+
+.pest-company-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    background: var(--success-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: var(--success);
+}
+
+.pest-company-icon svg {
+    width: 32px;
+    height: 32px;
+}
+
+/* ============================================================
+   Cleaning Module
+   ============================================================ */
+.cleaning-schedule-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-5);
+}
+
+.cleaning-zone-card {
+    position: relative;
+}
+
+.cleaning-zone-status {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+}
+
+.cleaning-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.cleaning-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--ease-out);
+}
+
+.cleaning-calendar-day.done {
+    background: var(--success-light);
+    color: var(--success);
+    font-weight: 600;
+}
+
+.cleaning-calendar-day.missed {
+    background: var(--danger-light);
+    color: var(--danger);
+    font-weight: 600;
+}
+
+.cleaning-calendar-day.today {
+    border: 2px solid var(--primary);
+    font-weight: 700;
+}
+
+/* ============================================================
+   Incidents Module
+   ============================================================ */
+.incident-timeline {
+    position: relative;
+    padding-left: var(--space-8);
+}
+
+.incident-timeline::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--gray-200);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: var(--space-6);
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: calc(-1 * var(--space-8) + 6px);
+    top: 4px;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-full);
+    border: 3px solid;
+    background: var(--bg-card);
+    z-index: 1;
+}
+
+.timeline-dot.open { border-color: var(--danger); }
+.timeline-dot.in-progress { border-color: var(--warning); }
+.timeline-dot.resolved { border-color: var(--success); }
+.timeline-dot.verified { border-color: var(--primary); }
+
+.timeline-content {
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+}
+
+.timeline-date {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-2);
+}
+
+.severity-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: var(--text-xs);
+    font-weight: 600;
+}
+
+.severity-indicator.low {
+    background: var(--success-light);
+    color: var(--success);
+}
+
+.severity-indicator.medium {
+    background: var(--warning-light);
+    color: var(--warning-hover);
+}
+
+.severity-indicator.high {
+    background: #FFE5E0;
+    color: #E04D40;
+}
+
+.severity-indicator.critical {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+/* ============================================================
+   Stock Module
+   ============================================================ */
+.stock-summary-bar {
+    display: flex;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+}
+
+.stock-summary-item {
+    flex: 1;
+    min-width: 160px;
+    padding: var(--space-4);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    text-align: center;
+}
+
+.stock-level-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.stock-level-bar .progress {
+    flex: 1;
+}
+
+.stock-warning-icon {
+    color: var(--warning);
+}
+
+.stock-danger-icon {
+    color: var(--danger);
+    animation: pulse 1.5s infinite;
+}
+
+/* ============================================================
+   Recipes Module
+   ============================================================ */
+.recipe-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.recipe-card-image {
+    height: 160px;
+    background: linear-gradient(135deg, var(--primary-ultra-light) 0%, var(--gray-100) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: var(--text-4xl);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.recipe-steps {
+    counter-reset: step;
+}
+
+.recipe-step {
+    display: flex;
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.recipe-step:last-child {
+    border-bottom: none;
+}
+
+.recipe-step-number {
+    counter-increment: step;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-sm);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.recipe-step-content {
+    flex: 1;
+}
+
+.recipe-allergen-auto {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    background: var(--warning-light);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 149, 0, 0.2);
+}
+
+/* ============================================================
+   Suppliers Module
+   ============================================================ */
+.supplier-card {
+    display: flex;
+    gap: var(--space-5);
+    padding: var(--space-5);
+}
+
+.supplier-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    background: var(--primary-gradient);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: var(--text-xl);
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.supplier-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.supplier-score {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+}
+
+.supplier-star {
+    color: var(--warning);
+    font-size: var(--text-lg);
+}
+
+.supplier-star.empty {
+    color: var(--gray-300);
+}
+
+/* ============================================================
+   Goods Entry Module
+   ============================================================ */
+.entry-verification-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: var(--space-3);
+}
+
+.verification-check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--gray-50);
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--border-light);
+    transition: all var(--duration-fast) var(--ease-out);
+}
+
+.verification-check.checked {
+    background: var(--success-light);
+    border-color: var(--success);
+}
+
+.verification-check.failed {
+    background: var(--danger-light);
+    border-color: var(--danger);
+}
+
+/* ============================================================
+   Water Module
+   ============================================================ */
+.water-gauge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-6);
+}
+
+.water-gauge-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 8px solid var(--gray-200);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--text-2xl);
+    font-weight: 800;
+    position: relative;
+}
+
+.water-gauge-circle.ok {
+    border-color: var(--success);
+    color: var(--success);
+}
+
+.water-gauge-circle.warn {
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+.water-gauge-label {
+    margin-top: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* ============================================================
+   Reports Module
+   ============================================================ */
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: var(--space-5);
+}
+
+.report-card {
+    cursor: pointer;
+    transition: all var(--duration-normal) var(--ease-out);
+}
+
+.report-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card-hover);
+}
+
+.report-card-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: var(--space-4);
+}
+
+.report-card-icon.blue { background: var(--primary-ultra-light); color: var(--primary); }
+.report-card-icon.green { background: var(--success-light); color: var(--success); }
+.report-card-icon.orange { background: var(--warning-light); color: var(--warning); }
+.report-card-icon.red { background: var(--danger-light); color: var(--danger); }
+.report-card-icon.purple { background: var(--info-light); color: var(--info); }
+
+.report-card-title {
+    font-size: var(--text-md);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-1);
+}
+
+.report-card-desc {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+}
+
+/* Checklist */
+.compliance-checklist {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+}
+
+.checklist-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--gray-50);
+    transition: background var(--duration-fast) var(--ease-out);
+}
+
+.checklist-item.done {
+    background: var(--success-light);
+}
+
+.checklist-item.pending {
+    background: var(--warning-light);
+}
+
+.checklist-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.checklist-icon.done {
+    background: var(--success);
+    color: white;
+}
+
+.checklist-icon.pending {
+    background: var(--warning);
+    color: white;
+}
+
+/* ============================================================
+   Print-Specific Styles for Traceability Sheet
+   ============================================================ */
+.print-sheet {
+    display: none;
+}
+
+@media print {
+    .print-sheet {
+        display: block;
+        padding: 20px;
+        font-size: 10pt;
+    }
+
+    .print-sheet-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        border-bottom: 2px solid #333;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+    }
+
+    .print-sheet-header h1 {
+        font-size: 18pt;
+    }
+
+    .print-sheet-section {
+        margin-bottom: 16px;
+        break-inside: avoid;
+    }
+
+    .print-sheet-section h3 {
+        font-size: 12pt;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 4px;
+        margin-bottom: 8px;
+    }
+
+    .print-sheet table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 9pt;
+    }
+
+    .print-sheet table th,
+    .print-sheet table td {
+        border: 1px solid #ccc;
+        padding: 4px 8px;
+        text-align: left;
+    }
+
+    .print-sheet table th {
+        background: #f0f0f0;
+        font-weight: 600;
+    }
+}

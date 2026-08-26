@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="description" content="TrazaControl — Sistema Integral de Trazabilidad, APPCC y Seguridad Alimentaria para Pequeños Negocios y Artesanos Locales">
+    <meta name="theme-color" content="#0071e3">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>TrazaControl — Gestión Sanitaria y Trazabilidad</title>
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS Design System -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/modules.css">
+</head>
+<body>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Global Demo Mode Warning Banner -->
+    <div id="demo-banner" class="demo-banner hidden">
+        <div class="demo-banner-content">
+            <span class="demo-badge">DEMO</span>
+            <span data-i18n="app.demo_banner">Modo Demostración Activo — Los datos son simulados para evaluación.</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="logout-btn" style="padding: 4px 12px; font-size: 12px;" data-i18n="auth.logout">Cerrar Sesión</button>
+    </div>
+
+    <!-- ============================================================
+         AUTH SCREEN (Login / Registration / Demo Entry)
+         ============================================================ -->
+    <div id="auth-screen" class="auth-screen">
+        <!-- Floating Language Selector on Auth Screen -->
+        <div class="auth-lang">
+            <div class="lang-selector">
+                <button class="lang-btn active" data-lang="es">ES</button>
+                <button class="lang-btn" data-lang="pt">PT</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+            </div>
+        </div>
+
+        <div class="auth-container">
+            <div class="auth-logo">
+                <div class="auth-logo-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M9 5H2v7l6.29 6.29a1 1 0 001.42 0l5.58-5.58a1 1 0 000-1.42L9 5z"/>
+                        <circle cx="6" cy="9" r="1"/>
+                        <path d="M15 5l6.29 6.29a1 1 0 010 1.42L18 16"/>
+                    </svg>
+                </div>
+                <h1 data-i18n="app.name">TrazaControl</h1>
+                <p class="text-secondary" data-i18n="app.tagline">Gestión de Trazabilidad y APPCC para Pequeños Negocios</p>
+            </div>
+
+            <!-- Login Form Card -->
+            <div id="login-form-container" class="auth-card">
+                <h2 data-i18n="auth.login_title">Iniciar Sesión</h2>
+                <p class="auth-subtitle" data-i18n="auth.login_subtitle">Accede al panel de control sanitario de tu negocio</p>
+
+                <div id="login-error" class="form-error mb-4" style="text-align: center;"></div>
+
+                <form id="login-form">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.email">Correo Electrónico</label>
+                        <input type="email" id="login-email" class="form-input" placeholder="tu@email.com" required autocomplete="username">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.password">Contraseña</label>
+                        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.login_btn">
+                        Iniciar Sesión
+                    </button>
+                </form>
+
+                <div class="auth-divider">
+                    <span data-i18n="auth.or_try_demo">O prueba la aplicación</span>
+                </div>
+
+                <!-- One-click Demo Access -->
+                <button type="button" id="demo-btn" class="demo-btn ripple-container">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 3 19 12 5 21 5 3"/>
+                    </svg>
+                    <span data-i18n="auth.try_demo">Probar Modo Demo</span>
+                </button>
+
+                <div class="auth-footer">
+                    <span data-i18n="auth.no_account">¿No tienes cuenta?</span>
+                    <button type="button" id="show-register" data-i18n="auth.register_link">Registrar mi negocio</button>
+                </div>
+            </div>
+
+            <!-- Register Form Card -->
+            <div id="register-form-container" class="auth-card hidden">
+                <h2 data-i18n="auth.register_title">Registrar Negocio</h2>
+                <p class="auth-subtitle" data-i18n="auth.register_subtitle">Configura el control sanitario para tu obrador o tienda</p>
+
+                <div id="register-error" class="form-error mb-4" style="text-align: center;"></div>
+
+                <form id="register-form">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.business_name">Nombre del Negocio</label>
+                        <input type="text" id="register-business" class="form-input" placeholder="Ej: Panadería El Obrador" required>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="auth.owner_name">Responsable / Titular</label>
+                            <input type="text" id="register-name" class="form-input" placeholder="Nombre completo" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="auth.business_type">Tipo de Negocio</label>
+                            <select id="register-type" class="form-select" required>
+                                <option value="bakery" data-i18n="auth.business_types.bakery">Panadería / Pastelería</option>
+                                <option value="butchery" data-i18n="auth.business_types.butchery">Carnicería / Charcutería</option>
+                                <option value="dairy" data-i18n="auth.business_types.dairy">Quesería / Lácteos</option>
+                                <option value="canning" data-i18n="auth.business_types.canning">Conservas Artesanales</option>
+                                <option value="honey" data-i18n="auth.business_types.honey">Miel / Apicultura</option>
+                                <option value="brewery" data-i18n="auth.business_types.brewery">Cervecería Artesanal</option>
+                                <option value="restaurant" data-i18n="auth.business_types.restaurant">Restauración / Catering</option>
+                                <option value="other" data-i18n="auth.business_types.other">Otro Negocio Alimentario</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.email">Correo Electrónico</label>
+                        <input type="email" id="register-email" class="form-input" placeholder="tu@email.com" required autocomplete="username">
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="auth.password">Contraseña</label>
+                            <input type="password" id="register-password" class="form-input" placeholder="Mín. 8 caracteres" required autocomplete="new-password">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-i18n="auth.confirm_password">Confirmar Contraseña</label>
+                            <input type="password" id="register-confirm-password" class="form-input" placeholder="Repite contraseña" required autocomplete="new-password">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.register_btn">
+                        Crear Cuenta y Comenzar
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <span data-i18n="auth.have_account">¿Ya tienes cuenta?</span>
+                    <button type="button" id="show-login" data-i18n="auth.login_link">Iniciar Sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         MAIN APP SHELL (Sidebar, Header, Main Content, Bottom Nav)
+         ============================================================ -->
+    <div id="app-container" class="app-container">
+
+        <!-- Mobile Dimmer Overlay -->
+        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
+        <!-- Sidebar Navigation -->
+        <aside id="sidebar" class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                        <path d="M9 5H2v7l6.29 6.29a1 1 0 001.42 0l5.58-5.58a1 1 0 000-1.42L9 5z"/>
+                        <circle cx="6" cy="9" r="1"/>
+                    </svg>
+                </div>
+                <div class="sidebar-brand">
+                    <span class="sidebar-brand-name" data-i18n="app.name">TrazaControl</span>
+                    <span class="sidebar-brand-tagline">APPCC & Trazabilidad</span>
+                </div>
+            </div>
+
+            <!-- Desktop Collapse Toggle Button -->
+            <button id="sidebar-toggle" class="sidebar-toggle" title="Contraer barra lateral" aria-label="Contraer barra lateral">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6"/>
+                </svg>
+            </button>
+
+            <!-- Navigation Links Container -->
+            <nav id="sidebar-nav" class="sidebar-nav"></nav>
+
+            <!-- Sidebar User Profile Footer -->
+            <div class="sidebar-footer">
+                <div class="sidebar-user" id="sidebar-user-container">
+                    <div class="avatar avatar-sm avatar-primary" id="sidebar-user-avatar">TC</div>
+                    <div class="sidebar-user-info">
+                        <div class="sidebar-user-name" id="sidebar-user-name">Usuario</div>
+                        <div class="sidebar-user-email" id="sidebar-user-email">email@negocio.es</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area Wrapper -->
+        <div class="main-content">
+            <!-- Top Sticky Glass Header -->
+            <header class="top-header">
+                <div class="top-header-left">
+                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir Menú">
+                        <div class="hamburger">
+                            <span class="hamburger-line"></span>
+                            <span class="hamburger-line"></span>
+                            <span class="hamburger-line"></span>
+                        </div>
+                    </button>
+                    <h1 class="page-title" id="page-title" data-i18n="nav.dashboard">Panel Principal</h1>
+                </div>
+
+                <div class="top-header-right">
+                    <!-- Real-time Language Switcher ES / PT / EN -->
+                    <div class="lang-selector">
+                        <button class="lang-btn active" data-lang="es">ES</button>
+                        <button class="lang-btn" data-lang="pt">PT</button>
+                        <button class="lang-btn" data-lang="en">EN</button>
+                    </div>
+
+                    <!-- Quick Notifications Bell -->
+                    <div class="header-notifications">
+                        <button class="notification-btn" onclick="App.navigateTo('dashboard')" aria-label="Notificaciones">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 01-3.46 0"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic Views Injection Area -->
+            <main class="content-area" id="content-area"></main>
+        </div>
+
+        <!-- Mobile Bottom Navigation Bar -->
+        <nav class="bottom-nav" id="bottom-nav">
+            <div class="bottom-nav-items" id="bottom-nav-items"></div>
+        </nav>
+    </div>
+
+    <!-- ============================================================
+         SCRIPTS: Core Libraries & Modules (Loaded in dependency order)
+         ============================================================ -->
+    <!-- 1. Database & Persistence Layer -->
+    <script src="js/db.js"></script>
+
+    <!-- 2. Utilities & Helper Functions -->
+    <script src="js/utils.js"></script>
+
+    <!-- 3. Internationalization Engine (ES/PT/EN) -->
+    <script src="js/i18n.js"></script>
+
+    <!-- 4. Security & Anti-Inspection Shield -->
+    <script src="js/security.js"></script>
+
+    <!-- 5. User Authentication & Session Engine -->
+    <script src="js/auth.js"></script>
+
+    <!-- 6. Demo Dataset Generator -->
+    <script src="js/demo-data.js"></script>
+
+    <!-- 7. Functional Business Modules -->
+    <script src="js/modules/dashboard.js"></script>
+    <script src="js/modules/traceability.js"></script>
+    <script src="js/modules/temperature.js"></script>
+    <script src="js/modules/pest-control.js"></script>
+    <script src="js/modules/cleaning.js"></script>
+    <script src="js/modules/water.js"></script>
+    <script src="js/modules/incidents.js"></script>
+    <script src="js/modules/stock.js"></script>
+    <script src="js/modules/recipes.js"></script>
+    <script src="js/modules/suppliers.js"></script>
+    <script src="js/modules/goods-entry.js"></script>
+    <script src="js/modules/reports.js"></script>
+
+    <!-- 8. Master Application Orchestrator & Router -->
+    <script src="js/app.js"></script>
+
+    <!-- Auto initialize UI elements and module containers -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            App.buildSidebar();
+            App.buildBottomNav();
+            App.buildModuleContainers();
+
+            // Initialize all registered modules
+            DashboardModule.init();
+            TraceabilityModule.init();
+            TemperatureModule.init();
+            PestControlModule.init();
+            CleaningModule.init();
+            WaterModule.init();
+            IncidentsModule.init();
+            StockModule.init();
+            RecipesModule.init();
+            SuppliersModule.init();
+            GoodsEntryModule.init();
+            ReportsModule.init();
+        });
+    </script>
+</body>
+</html>
