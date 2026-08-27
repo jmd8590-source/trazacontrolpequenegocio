@@ -93,22 +93,8 @@ const Security = (function() {
             }
         }
 
-        setInterval(checkDevTools, 1000);
-
-        // Method 2: debugger detection
-        (function detectDebugger() {
-            const start = performance.now();
-            /* jshint ignore:start */
-            debugger;
-            /* jshint ignore:end */
-            const end = performance.now();
-
-            if (end - start > 100) {
-                onDevToolsOpen();
-            }
-
-            setTimeout(detectDebugger, 5000);
-        })();
+        // Passive DevTools check
+        setInterval(checkDevTools, 2000);
     }
 
     // Action when DevTools are detected

@@ -193,26 +193,30 @@ const Utils = (function() {
     }
 
     // ---- Ripple Effect ----
-    function createRipple(event) {
-        const button = event.currentTarget;
-        if (!button.classList.contains('ripple-container')) return;
+    function createRipple(event, targetBtn) {
+        try {
+            const button = targetBtn || (event && event.target && event.target.closest('.ripple-container, .btn-primary, .btn-success, .btn-danger, .demo-btn'));
+            if (!button || !button.classList || !button.getBoundingClientRect) return;
 
-        const circle = document.createElement('span');
-        const diameter = Math.max(button.clientWidth, button.clientHeight);
-        const radius = diameter / 2;
+            const circle = document.createElement('span');
+            const diameter = Math.max(button.clientWidth || 30, button.clientHeight || 30);
+            const radius = diameter / 2;
 
-        const rect = button.getBoundingClientRect();
-        circle.style.width = circle.style.height = `${diameter}px`;
-        circle.style.left = `${event.clientX - rect.left - radius}px`;
-        circle.style.top = `${event.clientY - rect.top - radius}px`;
-        circle.classList.add('ripple');
+            const rect = button.getBoundingClientRect();
+            circle.style.width = circle.style.height = `${diameter}px`;
+            circle.style.left = `${(event.clientX || rect.left + radius) - rect.left - radius}px`;
+            circle.style.top = `${(event.clientY || rect.top + radius) - rect.top - radius}px`;
+            circle.classList.add('ripple');
 
-        const existingRipple = button.querySelector('.ripple');
-        if (existingRipple) existingRipple.remove();
+            const existingRipple = button.querySelector('.ripple');
+            if (existingRipple) existingRipple.remove();
 
-        button.appendChild(circle);
+            button.appendChild(circle);
 
-        setTimeout(() => circle.remove(), 600);
+            setTimeout(() => circle.remove(), 600);
+        } catch (e) {
+            // Ripple is purely decorative
+        }
     }
 
     // ---- Toast Notifications ----

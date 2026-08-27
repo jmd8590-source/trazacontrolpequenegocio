@@ -40,7 +40,7 @@ const RecipesModule = (function() {
                     </div>
                 </div>
                 <div class="toolbar-right">
-                    <button class="btn btn-primary ripple-container" id="recipe-add">
+                    <button class="btn btn-primary ripple-container" id="recipe-add" onclick="RecipesModule.newRecipe()">
                         ${App.getIcon('plus')} <span>${I18n.t('recipes.new_recipe')}</span>
                     </button>
                 </div>
@@ -72,16 +72,16 @@ const RecipesModule = (function() {
                                     </p>
                                     
                                     <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-light);">
-                                        <button class="btn btn-primary btn-block recipe-print-label-btn mb-2 ripple-container" data-id="${r.id}" style="font-weight: 700;">
+                                        <button type="button" class="btn btn-primary btn-block mb-2 ripple-container" onclick="RecipesModule.printLabel('${r.id}')" style="font-weight: 700;">
                                             🏷️ ${I18n.t('recipes.print_label')}
                                         </button>
                                         <div class="flex items-center justify-between gap-1">
-                                            <button class="btn btn-secondary btn-sm recipe-prod" data-id="${r.id}" title="${I18n.t('recipes.new_production')}">
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="RecipesModule.startProduction('${r.id}')" title="${I18n.t('recipes.new_production')}">
                                                 🏭 ${I18n.t('recipes.new_production')}
                                             </button>
                                             <div class="flex gap-1">
-                                                <button class="btn btn-ghost btn-sm recipe-edit" data-id="${r.id}" title="${I18n.t('app.edit')}">✏️</button>
-                                                <button class="btn btn-ghost btn-sm recipe-delete" data-id="${r.id}" title="${I18n.t('app.delete')}">🗑️</button>
+                                                <button type="button" class="btn btn-ghost btn-sm" onclick="RecipesModule.editRecipe('${r.id}')" title="${I18n.t('app.edit')}">✏️</button>
+                                                <button type="button" class="btn btn-ghost btn-sm" onclick="RecipesModule.deleteRecipe('${r.id}')" title="${I18n.t('app.delete')}">🗑️</button>
                                             </div>
                                         </div>
                                     </div>
@@ -96,7 +96,7 @@ const RecipesModule = (function() {
                         <div class="empty-state-icon" style="font-size: 40px; margin-bottom: 12px;">🍞</div>
                         <div class="empty-state-title">${I18n.t('app.no_data')}</div>
                         <p class="text-secondary mb-4">Crea tu primera receta artesana con ingredientes, aliños, condimentos y alérgenos para emitir etiquetas sanitarias.</p>
-                        <button class="btn btn-primary" id="recipe-add-empty">${I18n.t('recipes.new_recipe')}</button>
+                        <button class="btn btn-primary" onclick="RecipesModule.newRecipe()">${I18n.t('recipes.new_recipe')}</button>
                     </div>
                 </div>
             `}
@@ -106,7 +106,7 @@ const RecipesModule = (function() {
                 <div class="modal modal-lg">
                     <div class="modal-header">
                         <h3 id="recipe-modal-title">${I18n.t('recipes.new_recipe')}</h3>
-                        <button class="modal-close recipe-close">${App.getIcon('close')}</button>
+                        <button type="button" class="modal-close" onclick="Utils.closeModal('recipe-modal')">${App.getIcon('close')}</button>
                     </div>
                     <div class="modal-body">
                         <form id="recipe-form">
@@ -147,14 +147,14 @@ const RecipesModule = (function() {
                             </div>
                             <p class="text-xs text-secondary mb-3">Introduce todos los ingredientes, materias primas, aliños, condimentos y especias de la receta.</p>
                             <div id="recipe-ingredients" class="ingredient-list mb-4"></div>
-                            <button type="button" class="btn btn-ghost btn-sm" id="recipe-add-ingredient">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="RecipesModule.addIngredientRow()">
                                 ${App.getIcon('plus')} ${I18n.t('traceability.add_ingredient')} / Condimento
                             </button>
 
                             <div class="divider"></div>
                             <div class="module-section-title">📝 ${I18n.t('recipes.steps')}</div>
                             <div id="recipe-steps" class="mb-4"></div>
-                            <button type="button" class="btn btn-ghost btn-sm" id="recipe-add-step">
+                            <button type="button" class="btn btn-ghost btn-sm" onclick="RecipesModule.addStepRow()">
                                 ${App.getIcon('plus')} ${I18n.t('recipes.add_step')}
                             </button>
 
@@ -164,8 +164,8 @@ const RecipesModule = (function() {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary recipe-close">${I18n.t('app.cancel')}</button>
-                        <button class="btn btn-primary ripple-container" id="recipe-save">${I18n.t('app.save')}</button>
+                        <button type="button" class="btn btn-secondary" onclick="Utils.closeModal('recipe-modal')">${I18n.t('app.cancel')}</button>
+                        <button type="button" class="btn btn-primary ripple-container" onclick="RecipesModule.saveRecipe()">${I18n.t('app.save')}</button>
                     </div>
                 </div>
             </div>
@@ -175,7 +175,7 @@ const RecipesModule = (function() {
                 <div class="modal">
                     <div class="modal-header">
                         <h3>${I18n.t('recipes.new_production')}</h3>
-                        <button class="modal-close recipe-prod-close">${App.getIcon('close')}</button>
+                        <button type="button" class="modal-close" onclick="Utils.closeModal('recipe-prod-modal')">${App.getIcon('close')}</button>
                     </div>
                     <div class="modal-body">
                         <form id="recipe-prod-form">
@@ -211,8 +211,8 @@ const RecipesModule = (function() {
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary recipe-prod-close">${I18n.t('app.cancel')}</button>
-                        <button class="btn btn-primary ripple-container" id="recipe-prod-save">${I18n.t('app.save')} y Generar Etiqueta</button>
+                        <button type="button" class="btn btn-secondary" onclick="Utils.closeModal('recipe-prod-modal')">${I18n.t('app.cancel')}</button>
+                        <button type="button" class="btn btn-primary ripple-container" onclick="RecipesModule.saveProduction()">${I18n.t('app.save')} y Generar Etiqueta</button>
                     </div>
                 </div>
             </div>
@@ -222,7 +222,7 @@ const RecipesModule = (function() {
                 <div class="modal modal-lg">
                     <div class="modal-header">
                         <h3>🏷️ ${I18n.t('recipes.label_preview')}</h3>
-                        <button class="modal-close recipe-label-close">${App.getIcon('close')}</button>
+                        <button type="button" class="modal-close" onclick="Utils.closeModal('recipe-label-modal')">${App.getIcon('close')}</button>
                     </div>
                     <div class="modal-body">
                         <div class="label-customizer-controls mb-4">
@@ -299,9 +299,9 @@ const RecipesModule = (function() {
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn btn-secondary recipe-label-close">${I18n.t('app.close')}</button>
-                        <button class="btn btn-secondary" id="label-copy-text-btn">📋 Copiar Texto</button>
-                        <button class="btn btn-primary ripple-container" id="label-print-btn">🖨️ ${I18n.t('recipes.print_label')}</button>
+                        <button type="button" class="btn btn-secondary" onclick="Utils.closeModal('recipe-label-modal')">${I18n.t('app.close')}</button>
+                        <button type="button" class="btn btn-secondary" onclick="RecipesModule.copyLabelText()">📋 Copiar Texto</button>
+                        <button type="button" class="btn btn-primary ripple-container" onclick="window.print()">🖨️ ${I18n.t('recipes.print_label')}</button>
                     </div>
                 </div>
             </div>
@@ -364,6 +364,162 @@ const RecipesModule = (function() {
         return r;
     }
 
+    async function printLabel(recipeId) {
+        const r = await findRecipe(recipeId);
+        if (!r) return;
+        openLabelModalForRecipe(r, null);
+    }
+
+    async function startProduction(recipeId) {
+        const r = await findRecipe(recipeId);
+        if (!r) return;
+
+        Utils.clearForm('recipe-prod-form');
+        const rIdEl = document.querySelector('#recipe-prod-form [name="recipeId"]');
+        if (rIdEl) rIdEl.value = r.id;
+        const today = Utils.todayISO();
+        const recipeNameSanitized = (r.name || 'ART').replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase();
+        const batchNo = `LOT-${recipeNameSanitized}-${today.replace(/-/g,'').substring(2)}`;
+        
+        const bEl = document.querySelector('#recipe-prod-form [name="batchNumber"]');
+        const dEl = document.querySelector('#recipe-prod-form [name="date"]');
+        const eEl = document.querySelector('#recipe-prod-form [name="expiryDate"]');
+        const respEl = document.querySelector('#recipe-prod-form [name="responsible"]');
+
+        if (bEl) bEl.value = batchNo;
+        if (dEl) dEl.value = today;
+        if (eEl) eEl.value = getCalculatedExpiryISO(30);
+        if (respEl) respEl.value = (Auth.getUser() && Auth.getUser().ownerName) || '';
+
+        Utils.openModal('recipe-prod-modal');
+    }
+
+    function newRecipe() {
+        editingId = null;
+        const titleEl = document.getElementById('recipe-modal-title');
+        if (titleEl) titleEl.textContent = I18n.t('recipes.new_recipe');
+        Utils.clearForm('recipe-form');
+        const ingEl = document.getElementById('recipe-ingredients');
+        const stEl = document.getElementById('recipe-steps');
+        if (ingEl) ingEl.innerHTML = '';
+        if (stEl) stEl.innerHTML = '';
+        addIngredientRow({ name: '', qty: '' });
+        addIngredientRow({ name: '', qty: '' });
+        document.querySelectorAll('#recipe-allergen-grid .allergen-item').forEach(i => {
+            i.classList.remove('selected');
+            const cb = i.querySelector('input');
+            if (cb) cb.checked = false;
+        });
+        Utils.openModal('recipe-modal');
+    }
+
+    async function editRecipe(recipeId) {
+        const r = await findRecipe(recipeId);
+        if (!r) return;
+        editingId = r.id;
+        const titleEl = document.getElementById('recipe-modal-title');
+        if (titleEl) titleEl.textContent = I18n.t('app.edit') + ': ' + r.name;
+        Utils.setFormData('recipe-form', r);
+
+        const ingEl = document.getElementById('recipe-ingredients');
+        if (ingEl) {
+            ingEl.innerHTML = '';
+            (r.ingredients || []).forEach(i => addIngredientRow(i));
+            if (!r.ingredients || r.ingredients.length === 0) addIngredientRow();
+        }
+
+        const stEl = document.getElementById('recipe-steps');
+        if (stEl) {
+            stEl.innerHTML = '';
+            (r.steps || []).forEach(s => addStepRow(s));
+        }
+
+        document.querySelectorAll('#recipe-allergen-grid .allergen-item').forEach(i => {
+            i.classList.remove('selected');
+            const cb = i.querySelector('input');
+            if (cb) cb.checked = false;
+        });
+        (r.allergens || []).forEach(a => {
+            const cb = document.querySelector(`#recipe-allergen-grid input[value="${a}"]`);
+            if (cb) {
+                cb.checked = true;
+                cb.closest('.allergen-item').classList.add('selected');
+            }
+        });
+
+        Utils.openModal('recipe-modal');
+    }
+
+    async function deleteRecipe(recipeId) {
+        Utils.showConfirm(
+            I18n.t('app.confirm_delete'),
+            I18n.t('app.confirm_delete_desc'),
+            async () => {
+                await TrazaDB.remove('recipes', recipeId);
+                Utils.showToast('success', I18n.t('app.success_delete'));
+                render();
+            },
+            I18n.t.bind(I18n)
+        );
+    }
+
+    async function saveRecipe() {
+        const d = Utils.getFormData('recipe-form');
+        if (!d.name) {
+            Utils.showToast('error', I18n.t('app.error_required'));
+            return;
+        }
+
+        d.ingredients = Array.from(document.querySelectorAll('#recipe-ingredients .ingredient-row'))
+            .map(r => {
+                const inputs = r.querySelectorAll('input');
+                return { name: inputs[0].value.trim(), qty: inputs[1].value.trim() };
+            })
+            .filter(i => i.name);
+
+        d.steps = Array.from(document.querySelectorAll('#recipe-steps textarea'))
+            .map(t => t.value.trim())
+            .filter(s => s);
+
+        d.allergens = Array.from(document.querySelectorAll('#recipe-allergen-grid input:checked'))
+            .map(cb => cb.value);
+
+        d.userId = Auth.getUserId();
+
+        if (editingId) {
+            d.id = editingId;
+            await TrazaDB.update('recipes', d);
+            Utils.showToast('success', I18n.t('app.success_update'));
+        } else {
+            await TrazaDB.create('recipes', d);
+            Utils.showToast('success', I18n.t('app.success_save'));
+        }
+
+        Utils.closeModal('recipe-modal');
+        render();
+    }
+
+    async function saveProduction() {
+        const d = Utils.getFormData('recipe-prod-form');
+        if (!d.batchNumber) {
+            Utils.showToast('error', I18n.t('app.error_required') + ' (Lote)');
+            return;
+        }
+        d.userId = Auth.getUserId();
+        const recipe = await findRecipe(d.recipeId);
+        d.recipeName = recipe ? recipe.name : '';
+        d.date = d.date ? new Date(d.date).toISOString() : Utils.nowISO();
+
+        await TrazaDB.create('productions', d);
+        Utils.closeModal('recipe-prod-modal');
+        Utils.showToast('success', 'Producción registrada con éxito');
+
+        if (recipe) {
+            openLabelModalForRecipe(recipe, d);
+        }
+        render();
+    }
+
     function openLabelModalForRecipe(recipe, production) {
         if (!recipe) return;
         currentLabelData = { recipe, production };
@@ -405,11 +561,9 @@ const RecipesModule = (function() {
         if (mfgEl) mfgEl.textContent = Utils.formatDate(mfgDate, I18n.getLang());
         if (expEl) expEl.textContent = Utils.formatDate(expDate, I18n.getLang());
 
-        // Ingredients & Condiments string
         const ingList = (recipe.ingredients || []).map(i => `${i.name}${i.qty ? ' (' + i.qty + ')' : ''}`);
         if (ingEl) ingEl.textContent = ingList.length > 0 ? ingList.join(', ') + '.' : 'Ingredientes propios de elaboración artesana.';
 
-        // Allergens
         const allergensList = (recipe.allergens || []).map(a => (I18n.t('traceability.allergen_list.' + a) || a).toUpperCase());
         if (allSec && allEl) {
             if (allergensList.length > 0) {
@@ -421,36 +575,42 @@ const RecipesModule = (function() {
             }
         }
 
-        // Storage
         if (stgEl) stgEl.textContent = recipe.storageConditions || 'Conservar en lugar fresco, seco y protegido de la luz directa.';
+    }
+
+    function copyLabelText() {
+        const title = document.getElementById('label-product-title') ? document.getElementById('label-product-title').textContent : '';
+        const business = document.getElementById('label-business-name') ? document.getElementById('label-business-name').textContent : '';
+        const batch = document.getElementById('label-disp-batch') ? document.getElementById('label-disp-batch').textContent : '';
+        const mfg = document.getElementById('label-disp-mfg') ? document.getElementById('label-disp-mfg').textContent : '';
+        const exp = document.getElementById('label-disp-exp') ? document.getElementById('label-disp-exp').textContent : '';
+        const ing = document.getElementById('label-disp-ingredients') ? document.getElementById('label-disp-ingredients').textContent : '';
+        const all = document.getElementById('label-disp-allergens') ? document.getElementById('label-disp-allergens').textContent : '';
+        const stg = document.getElementById('label-disp-storage') ? document.getElementById('label-disp-storage').textContent : '';
+
+        const labelText = `
+PRODUCTO: ${title}
+OBRADOR: ${business}
+LOTE: ${batch}
+F. ELABORACIÓN: ${mfg}
+F. CADUCIDAD: ${exp}
+INGREDIENTES Y CONDIMENTOS: ${ing}
+ALÉRGENOS: ${all}
+CONSERVACIÓN: ${stg}
+        `.trim();
+
+        navigator.clipboard.writeText(labelText).then(() => {
+            Utils.showToast('success', 'Texto de la etiqueta copiado al portapapeles');
+        }).catch(() => {
+            Utils.showToast('info', 'Texto listo para copiar');
+        });
     }
 
     function setupEvents() {
         if (eventsInitialized) return;
         eventsInitialized = true;
 
-        Utils.delegate(document.body, '#recipe-add, #recipe-add-empty', 'click', () => {
-            editingId = null;
-            document.getElementById('recipe-modal-title').textContent = I18n.t('recipes.new_recipe');
-            Utils.clearForm('recipe-form');
-            document.getElementById('recipe-ingredients').innerHTML = '';
-            document.getElementById('recipe-steps').innerHTML = '';
-            addIngredientRow({ name: '', qty: '' });
-            addIngredientRow({ name: '', qty: '' });
-            document.querySelectorAll('#recipe-allergen-grid .allergen-item').forEach(i => {
-                i.classList.remove('selected');
-                const cb = i.querySelector('input');
-                if (cb) cb.checked = false;
-            });
-            Utils.openModal('recipe-modal');
-        });
-
-        Utils.delegate(document.body, '.recipe-close', 'click', () => Utils.closeModal('recipe-modal'));
-
-        Utils.delegate(document.body, '#recipe-add-ingredient', 'click', () => addIngredientRow());
-        Utils.delegate(document.body, '#recipe-add-step', 'click', () => addStepRow());
-
-        Utils.delegate(document.body, '.allergen-item', 'click', function(e) {
+        Utils.delegate(document.body, '.allergen-item', function(e) {
             if (e.target.tagName === 'INPUT') return;
             const cb = this.querySelector('input[type="checkbox"]');
             if (cb) {
@@ -458,142 +618,6 @@ const RecipesModule = (function() {
                 this.classList.toggle('selected', cb.checked);
             }
         });
-
-        Utils.delegate(document.body, '#recipe-save', 'click', async () => {
-            const d = Utils.getFormData('recipe-form');
-            if (!d.name) {
-                Utils.showToast('error', I18n.t('app.error_required'));
-                return;
-            }
-
-            d.ingredients = Array.from(document.querySelectorAll('#recipe-ingredients .ingredient-row'))
-                .map(r => {
-                    const inputs = r.querySelectorAll('input');
-                    return { name: inputs[0].value.trim(), qty: inputs[1].value.trim() };
-                })
-                .filter(i => i.name);
-
-            d.steps = Array.from(document.querySelectorAll('#recipe-steps textarea'))
-                .map(t => t.value.trim())
-                .filter(s => s);
-
-            d.allergens = Array.from(document.querySelectorAll('#recipe-allergen-grid input:checked'))
-                .map(cb => cb.value);
-
-            d.userId = Auth.getUserId();
-
-            if (editingId) {
-                d.id = editingId;
-                await TrazaDB.update('recipes', d);
-                Utils.showToast('success', I18n.t('app.success_update'));
-            } else {
-                await TrazaDB.create('recipes', d);
-                Utils.showToast('success', I18n.t('app.success_save'));
-            }
-
-            Utils.closeModal('recipe-modal');
-            render();
-        });
-
-        Utils.delegate(document.body, '.recipe-edit', 'click', async function(e) {
-            e.stopPropagation();
-            const r = await findRecipe(this.dataset.id);
-            if (!r) return;
-            editingId = r.id;
-            document.getElementById('recipe-modal-title').textContent = I18n.t('app.edit') + ': ' + r.name;
-            Utils.setFormData('recipe-form', r);
-
-            document.getElementById('recipe-ingredients').innerHTML = '';
-            (r.ingredients || []).forEach(i => addIngredientRow(i));
-            if (!r.ingredients || r.ingredients.length === 0) addIngredientRow();
-
-            document.getElementById('recipe-steps').innerHTML = '';
-            (r.steps || []).forEach(s => addStepRow(s));
-
-            document.querySelectorAll('#recipe-allergen-grid .allergen-item').forEach(i => {
-                i.classList.remove('selected');
-                const cb = i.querySelector('input');
-                if (cb) cb.checked = false;
-            });
-            (r.allergens || []).forEach(a => {
-                const cb = document.querySelector(`#recipe-allergen-grid input[value="${a}"]`);
-                if (cb) {
-                    cb.checked = true;
-                    cb.closest('.allergen-item').classList.add('selected');
-                }
-            });
-
-            Utils.openModal('recipe-modal');
-        });
-
-        Utils.delegate(document.body, '.recipe-delete', 'click', function(e) {
-            e.stopPropagation();
-            const id = this.dataset.id;
-            Utils.showConfirm(
-                I18n.t('app.confirm_delete'),
-                I18n.t('app.confirm_delete_desc'),
-                async () => {
-                    await TrazaDB.remove('recipes', id);
-                    Utils.showToast('success', I18n.t('app.success_delete'));
-                    render();
-                },
-                I18n.t.bind(I18n)
-            );
-        });
-
-        // Open Production Modal
-        Utils.delegate(document.body, '.recipe-prod', async function(e) {
-            e.stopPropagation();
-            const recipeId = this.dataset.id;
-            const r = await findRecipe(recipeId);
-            if (!r) return;
-
-            Utils.clearForm('recipe-prod-form');
-            document.querySelector('#recipe-prod-form [name="recipeId"]').value = recipeId;
-            const today = Utils.todayISO();
-            const recipeNameSanitized = (r.name || 'ART').replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase();
-            const batchNo = `LOT-${recipeNameSanitized}-${today.replace(/-/g,'').substring(2)}`;
-            document.querySelector('#recipe-prod-form [name="batchNumber"]').value = batchNo;
-            document.querySelector('#recipe-prod-form [name="date"]').value = today;
-            document.querySelector('#recipe-prod-form [name="expiryDate"]').value = getCalculatedExpiryISO(30);
-            document.querySelector('#recipe-prod-form [name="responsible"]').value = (Auth.getUser() && Auth.getUser().ownerName) || '';
-
-            Utils.openModal('recipe-prod-modal');
-        });
-
-        Utils.delegate(document.body, '.recipe-prod-close', () => Utils.closeModal('recipe-prod-modal'));
-
-        Utils.delegate(document.body, '#recipe-prod-save', async () => {
-            const d = Utils.getFormData('recipe-prod-form');
-            if (!d.batchNumber) {
-                Utils.showToast('error', I18n.t('app.error_required') + ' (Lote)');
-                return;
-            }
-            d.userId = Auth.getUserId();
-            const recipe = await findRecipe(d.recipeId);
-            d.recipeName = recipe ? recipe.name : '';
-            d.date = d.date ? new Date(d.date).toISOString() : Utils.nowISO();
-
-            await TrazaDB.create('productions', d);
-            Utils.closeModal('recipe-prod-modal');
-            Utils.showToast('success', 'Producción registrada con éxito');
-
-            // Automatically open printable label
-            if (recipe) {
-                openLabelModalForRecipe(recipe, d);
-            }
-            render();
-        });
-
-        // Open Direct Label Modal
-        Utils.delegate(document.body, '.recipe-print-label-btn', async function(e) {
-            e.stopPropagation();
-            const r = await findRecipe(this.dataset.id);
-            if (!r) return;
-            openLabelModalForRecipe(r, null);
-        });
-
-        Utils.delegate(document.body, '.recipe-label-close', () => Utils.closeModal('recipe-label-modal'));
 
         // Dynamic update of label preview from controls
         ['label-ctrl-batch', 'label-ctrl-mfg', 'label-ctrl-exp'].forEach(id => {
@@ -610,31 +634,6 @@ const RecipesModule = (function() {
             }
         });
 
-        // Print Action
-        Utils.delegate(document.body, '#label-print-btn', 'click', () => {
-            window.print();
-        });
-
-        // Copy Text for Thermal Printers
-        Utils.delegate(document.body, '#label-copy-text-btn', 'click', () => {
-            const labelText = `
-PRODUCTO: ${document.getElementById('label-product-title').textContent}
-OBRADOR: ${document.getElementById('label-business-name').textContent}
-LOTE: ${document.getElementById('label-disp-batch').textContent}
-F. ELABORACIÓN: ${document.getElementById('label-disp-mfg').textContent}
-F. CADUCIDAD: ${document.getElementById('label-disp-exp').textContent}
-INGREDIENTES Y CONDIMENTOS: ${document.getElementById('label-disp-ingredients').textContent}
-ALÉRGENOS: ${document.getElementById('label-disp-allergens').textContent}
-CONSERVACIÓN: ${document.getElementById('label-disp-storage').textContent}
-            `.trim();
-
-            navigator.clipboard.writeText(labelText).then(() => {
-                Utils.showToast('success', 'Texto de la etiqueta copiado al portapapeles');
-            }).catch(() => {
-                Utils.showToast('info', 'Texto listo para copiar');
-            });
-        });
-
         // Search Filter
         const searchInput = document.getElementById('recipe-search');
         if (searchInput) {
@@ -647,5 +646,18 @@ CONSERVACIÓN: ${document.getElementById('label-disp-storage').textContent}
         }
     }
 
-    return { init, render };
+    return {
+        init,
+        render,
+        printLabel,
+        startProduction,
+        newRecipe,
+        editRecipe,
+        deleteRecipe,
+        saveRecipe,
+        saveProduction,
+        addIngredientRow,
+        addStepRow,
+        copyLabelText
+    };
 })();

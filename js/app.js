@@ -81,6 +81,25 @@ const App = (function() {
             // Init auth
             await Auth.init();
 
+            // Build UI structures
+            buildSidebar();
+            buildBottomNav();
+            buildModuleContainers();
+
+            // Initialize all registered modules
+            if (typeof DashboardModule !== 'undefined') DashboardModule.init();
+            if (typeof TraceabilityModule !== 'undefined') TraceabilityModule.init();
+            if (typeof TemperatureModule !== 'undefined') TemperatureModule.init();
+            if (typeof PestControlModule !== 'undefined') PestControlModule.init();
+            if (typeof CleaningModule !== 'undefined') CleaningModule.init();
+            if (typeof WaterModule !== 'undefined') WaterModule.init();
+            if (typeof IncidentsModule !== 'undefined') IncidentsModule.init();
+            if (typeof StockModule !== 'undefined') StockModule.init();
+            if (typeof RecipesModule !== 'undefined') RecipesModule.init();
+            if (typeof SuppliersModule !== 'undefined') SuppliersModule.init();
+            if (typeof GoodsEntryModule !== 'undefined') GoodsEntryModule.init();
+            if (typeof ReportsModule !== 'undefined') ReportsModule.init();
+
             // Setup event listeners
             setupEventListeners();
 
@@ -318,39 +337,10 @@ const App = (function() {
         Utils.delegate(document.body, '#mobile-menu-btn', 'click', toggleMobileMenu);
 
         // Sidebar overlay (close on click)
-        Utils.delegate(document.body, '#sidebar-overlay', 'click', closeMobileMenu);
-
-        // Sidebar collapse toggle
-        Utils.delegate(document.body, '#sidebar-toggle', 'click', toggleSidebar);
-
         // Theme toggle (Dark / Light Mode)
         Utils.delegate(document.body, '#theme-toggle-btn, #auth-theme-toggle-btn', 'click', toggleTheme);
 
-        // Language selector (Real-time simultaneous translation across whole page)
-        Utils.delegate(document.body, '.lang-btn', async function(e) {
-            e.stopPropagation();
-            const lang = this.dataset.lang;
-            await I18n.setLanguage(lang);
-            
-            buildSidebar();
-            buildBottomNav();
-            updateUserInfo();
-            I18n.translatePage();
-
-            // Re-render current module if in app
-            if (currentModule && modules[currentModule]) {
-                const navItem = NAV_ITEMS.find(n => n.id === currentModule);
-                if (navItem) {
-                    const titleEl = document.getElementById('page-title');
-                    if (titleEl) titleEl.textContent = I18n.t(navItem.labelKey);
-                }
-                if (typeof modules[currentModule].render === 'function') {
-                    await modules[currentModule].render();
-                }
-            }
-        });
-
-        // Logout (from top header, sidebar or demo banner)
+        // Logout
         Utils.delegate(document.body, '#logout-btn, #header-logout-btn', 'click', async () => {
             Utils.showConfirm(
                 I18n.t('auth.logout'),
@@ -371,21 +361,28 @@ const App = (function() {
                 navigateTo(hash);
             }
         });
+    }
 
-        // Language change callback
-        I18n.onChange(() => {
-            buildSidebar();
-            buildBottomNav();
-            updateUserInfo();
-        });
+    // Change Language directly (Instant & Global)
+    async function changeLanguage(lang) {
+        if (!lang) return;
+        await I18n.setLanguage(lang);
+        buildSidebar();
+        buildBottomNav();
+        updateUserInfo();
+        I18n.translatePage();
 
-        // Ripple effect on buttons
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-primary, .btn-success, .btn-danger');
-            if (btn) {
-                Utils.createRipple(e);
+        // Re-render current module if in app
+        if (currentModule && modules[currentModule]) {
+            const navItem = NAV_ITEMS.find(n => n.id === currentModule);
+            if (navItem) {
+                const titleEl = document.getElementById('page-title');
+                if (titleEl) titleEl.textContent = I18n.t(navItem.labelKey);
             }
-        });
+            if (typeof modules[currentModule].render === 'function') {
+                await modules[currentModule].render();
+            }
+        }
     }
 
     // Toggle Theme (Dark / Light)
@@ -543,6 +540,7 @@ const App = (function() {
         showApp,
         navigateTo,
         registerModule,
+        changeLanguage,
         getIcon,
         buildSidebar,
         buildBottomNav,
