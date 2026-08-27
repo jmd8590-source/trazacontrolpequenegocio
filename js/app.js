@@ -108,6 +108,9 @@ const App = (function() {
             document.getElementById('login-form-container').classList.remove('hidden');
             document.getElementById('register-form-container').classList.add('hidden');
         }
+
+        // Live translate auth screen elements
+        I18n.translatePage();
     }
 
     // Show main app
@@ -332,10 +335,13 @@ const App = (function() {
         // Theme toggle (Dark / Light Mode)
         Utils.delegate(document.body, '#theme-toggle-btn, #auth-theme-toggle-btn', 'click', toggleTheme);
 
-        // Language selector
-        Utils.delegate(document.body, '.lang-btn', 'click', function() {
-            I18n.setLanguage(this.dataset.lang);
-            // Re-render current module
+        // Language selector (Real-time simultaneous translation across whole page)
+        Utils.delegate(document.body, '.lang-btn', async function() {
+            const lang = this.dataset.lang;
+            await I18n.setLanguage(lang);
+            I18n.translatePage();
+
+            // Re-render current module if logged in
             if (currentModule && modules[currentModule]) {
                 buildSidebar();
                 buildBottomNav();
