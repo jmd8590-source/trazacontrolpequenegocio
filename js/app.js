@@ -99,7 +99,6 @@ const App = (function() {
     function showAuth(view) {
         document.getElementById('auth-screen').classList.add('active');
         document.getElementById('app-container').classList.remove('active');
-        document.getElementById('demo-banner').classList.add('hidden');
 
         if (view === 'register') {
             document.getElementById('login-form-container').classList.add('hidden');
@@ -117,13 +116,6 @@ const App = (function() {
     function showApp() {
         document.getElementById('auth-screen').classList.remove('active');
         document.getElementById('app-container').classList.add('active');
-
-        // Show demo banner if in demo mode
-        if (Auth.isDemoMode()) {
-            document.getElementById('demo-banner').classList.remove('hidden');
-        } else {
-            document.getElementById('demo-banner').classList.add('hidden');
-        }
 
         // Update user info in sidebar
         updateUserInfo();
