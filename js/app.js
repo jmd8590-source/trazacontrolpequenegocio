@@ -327,24 +327,25 @@ const App = (function() {
         Utils.delegate(document.body, '#theme-toggle-btn, #auth-theme-toggle-btn', 'click', toggleTheme);
 
         // Language selector (Real-time simultaneous translation across whole page)
-        Utils.delegate(document.body, '.lang-btn', async function() {
+        Utils.delegate(document.body, '.lang-btn', async function(e) {
+            e.stopPropagation();
             const lang = this.dataset.lang;
             await I18n.setLanguage(lang);
+            
+            buildSidebar();
+            buildBottomNav();
+            updateUserInfo();
             I18n.translatePage();
 
-            // Re-render current module if logged in
+            // Re-render current module if in app
             if (currentModule && modules[currentModule]) {
-                buildSidebar();
-                buildBottomNav();
-                updateUserInfo();
-                if (typeof modules[currentModule].render === 'function') {
-                    modules[currentModule].render();
-                }
-                // Update page title
                 const navItem = NAV_ITEMS.find(n => n.id === currentModule);
                 if (navItem) {
                     const titleEl = document.getElementById('page-title');
                     if (titleEl) titleEl.textContent = I18n.t(navItem.labelKey);
+                }
+                if (typeof modules[currentModule].render === 'function') {
+                    await modules[currentModule].render();
                 }
             }
         });

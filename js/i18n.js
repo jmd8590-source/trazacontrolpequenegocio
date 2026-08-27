@@ -16,7 +16,7 @@ const I18n = (function() {
         if (loaded[lang]) return loaded[lang];
 
         try {
-            const response = await fetch(`lang/${lang}.json`);
+            const response = await fetch(`lang/${lang}.json?v=${Date.now()}`);
             if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
             const data = await response.json();
             loaded[lang] = data;
@@ -31,7 +31,7 @@ const I18n = (function() {
     async function init(lang) {
         currentLang = lang || localStorage.getItem('trazacontrol_lang') || 'es';
 
-        // Load all three languages
+        // Load all three languages in parallel
         await Promise.all([
             loadLanguage('es'),
             loadLanguage('pt'),
@@ -47,6 +47,7 @@ const I18n = (function() {
 
     // Get nested translation by dot-notation key
     function t(key, params) {
+        if (!key) return '';
         const keys = key.split('.');
         let value = translations;
 
@@ -86,16 +87,19 @@ const I18n = (function() {
             }
         }
 
-        return value;
+        return typeof value === 'string' ? value : key;
     }
 
     // Change language
     async function setLanguage(lang) {
-        if (lang === currentLang) return;
         if (!['es', 'pt', 'en'].includes(lang)) return;
 
+        if (!loaded[lang]) {
+            await loadLanguage(lang);
+        }
+
         currentLang = lang;
-        translations = loaded[lang] || {};
+        translations = loaded[lang] || loaded['es'] || {};
 
         localStorage.setItem('trazacontrol_lang', lang);
         document.documentElement.lang = lang;
@@ -103,7 +107,7 @@ const I18n = (function() {
         translatePage();
         updateLangButtons();
 
-        // Notify listeners
+        // Notify all registered listeners
         listeners.forEach(fn => {
             try { fn(lang); } catch(e) { console.error(e); }
         });
@@ -120,7 +124,7 @@ const I18n = (function() {
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
             const translation = t(key);
-            if (translation !== key) {
+            if (translation && translation !== key) {
                 el.textContent = translation;
             }
         });
@@ -129,7 +133,7 @@ const I18n = (function() {
         document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
             const key = el.getAttribute('data-i18n-placeholder');
             const translation = t(key);
-            if (translation !== key) {
+            if (translation && translation !== key) {
                 el.placeholder = translation;
             }
         });
@@ -138,7 +142,7 @@ const I18n = (function() {
         document.querySelectorAll('[data-i18n-title]').forEach(el => {
             const key = el.getAttribute('data-i18n-title');
             const translation = t(key);
-            if (translation !== key) {
+            if (translation && translation !== key) {
                 el.title = translation;
             }
         });
@@ -147,16 +151,16 @@ const I18n = (function() {
         document.querySelectorAll('[data-i18n-aria]').forEach(el => {
             const key = el.getAttribute('data-i18n-aria');
             const translation = t(key);
-            if (translation !== key) {
+            if (translation && translation !== key) {
                 el.setAttribute('aria-label', translation);
             }
         });
 
-        // HTML content (use sparingly, for structured content)
+        // HTML content
         document.querySelectorAll('[data-i18n-html]').forEach(el => {
             const key = el.getAttribute('data-i18n-html');
             const translation = t(key);
-            if (translation !== key) {
+            if (translation && translation !== key) {
                 el.innerHTML = translation;
             }
         });

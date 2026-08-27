@@ -1,14 +1,18 @@
 /* ============================================================
-   TrazaControl — Recipes & Production Module (with Label Printing)
+   TrazaControl — Recipes & Production Module (Ultra-Reliable)
+   Instant Label Printing, Batch Management & Multi-Language
    ============================================================ */
 const RecipesModule = (function() {
     'use strict';
 
     let editingId = null;
     let currentLabelData = null;
+    let currentRecipes = [];
+    let eventsInitialized = false;
 
     function init() {
         App.registerModule('recipes', { render });
+        setupEvents();
     }
 
     async function render() {
@@ -20,6 +24,8 @@ const RecipesModule = (function() {
             TrazaDB.getByUser('recipes', userId),
             TrazaDB.getByUser('productions', userId)
         ]);
+
+        currentRecipes = recipes || [];
 
         container.innerHTML = `
             <div class="module-header">
@@ -40,17 +46,17 @@ const RecipesModule = (function() {
                 </div>
             </div>
 
-            ${recipes.length > 0 ? `
+            ${currentRecipes.length > 0 ? `
                 <div class="grid-auto stagger-grid">
-                    ${recipes.map(r => {
+                    ${currentRecipes.map(r => {
                         const allergens = (r.allergens || []).map(a => I18n.t('traceability.allergen_list.' + a) || a);
-                        const prodCount = productions.filter(p => p.recipeId === r.id).length;
+                        const prodCount = (productions || []).filter(p => String(p.recipeId) === String(r.id)).length;
 
                         return `
                             <div class="card recipe-card hover-lift" data-id="${r.id}">
                                 <div class="recipe-card-image">${r.emoji || '🍞'}</div>
                                 <div class="card-body">
-                                    <h4 style="font-size: var(--text-lg);">${Utils.sanitize(r.name)}</h4>
+                                    <h4 style="font-size: var(--text-lg); margin-bottom: 4px;">${Utils.sanitize(r.name)}</h4>
                                     <p class="text-sm text-secondary mb-2">${Utils.sanitize(r.category || 'Elaboración artesanal')}</p>
                                     <p class="text-xs text-secondary mb-2">
                                         <strong>${I18n.t('recipes.servings')}:</strong> ${r.servings || r.yield || '-'} | 
@@ -61,12 +67,12 @@ const RecipesModule = (function() {
                                             ⚠️ <strong>${I18n.t('traceability.allergens')}:</strong> ${allergens.join(', ')}
                                         </div>
                                     ` : ''}
-                                    <p class="text-xs text-secondary">
+                                    <p class="text-xs text-secondary mb-3">
                                         <strong>${prodCount}</strong> ${I18n.t('recipes.productions')} registradas
                                     </p>
                                     
-                                    <div class="mt-4 pt-3" style="border-top: 1px solid var(--border-light);">
-                                        <button class="btn btn-primary btn-block recipe-print-label-btn mb-2" data-id="${r.id}" style="font-weight: 700;">
+                                    <div class="mt-3 pt-3" style="border-top: 1px solid var(--border-light);">
+                                        <button class="btn btn-primary btn-block recipe-print-label-btn mb-2 ripple-container" data-id="${r.id}" style="font-weight: 700;">
                                             🏷️ ${I18n.t('recipes.print_label')}
                                         </button>
                                         <div class="flex items-center justify-between gap-1">
@@ -300,8 +306,6 @@ const RecipesModule = (function() {
                 </div>
             </div>
         `;
-
-        setupEvents();
     }
 
     function getCalculatedExpiryISO(daysAhead) {
@@ -351,60 +355,86 @@ const RecipesModule = (function() {
         row.querySelector('button').addEventListener('click', () => row.remove());
     }
 
+    async function findRecipe(id) {
+        if (!id) return null;
+        let r = currentRecipes.find(x => String(x.id) === String(id));
+        if (!r) {
+            r = await TrazaDB.read('recipes', id);
+        }
+        return r;
+    }
+
     function openLabelModalForRecipe(recipe, production) {
+        if (!recipe) return;
         currentLabelData = { recipe, production };
         const user = Auth.getUser() || {};
         const today = Utils.todayISO();
         const expDate = (production && production.expiryDate) || getCalculatedExpiryISO(30);
-        const batchNo = (production && production.batchNumber) || `LOT-${recipe.name.substring(0,3).toUpperCase()}-${today.replace(/-/g,'').substring(2)}`;
+        const recipeNameSanitized = (recipe.name || 'ART').replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase();
+        const batchNo = (production && production.batchNumber) || `LOT-${recipeNameSanitized}-${today.replace(/-/g,'').substring(2)}`;
 
-        // Populate controls
-        document.getElementById('label-ctrl-batch').value = batchNo;
-        document.getElementById('label-ctrl-mfg').value = (production && production.date) ? production.date.split('T')[0] : today;
-        document.getElementById('label-ctrl-exp').value = expDate;
+        const batchInput = document.getElementById('label-ctrl-batch');
+        const mfgInput = document.getElementById('label-ctrl-mfg');
+        const expInput = document.getElementById('label-ctrl-exp');
 
-        // Render Label Preview
+        if (batchInput) batchInput.value = batchNo;
+        if (mfgInput) mfgInput.value = (production && production.date) ? production.date.split('T')[0] : today;
+        if (expInput) expInput.value = expDate;
+
         updateLabelPreviewDOM(recipe, batchNo, today, expDate, user);
-
         Utils.openModal('recipe-label-modal');
     }
 
     function updateLabelPreviewDOM(recipe, batchNo, mfgDate, expDate, user) {
-        document.getElementById('label-business-name').textContent = user.businessName || user.ownerName || 'Obrador Artesanal';
-        document.getElementById('label-product-title').textContent = (recipe.emoji ? recipe.emoji + ' ' : '') + recipe.name;
-        document.getElementById('label-sanitary-code').textContent = user.businessType ? 'TIPO: ' + user.businessType.toUpperCase() : 'REG. SANITARIO ARTESANO';
+        const busEl = document.getElementById('label-business-name');
+        const titleEl = document.getElementById('label-product-title');
+        const sanEl = document.getElementById('label-sanitary-code');
+        const batchEl = document.getElementById('label-disp-batch');
+        const mfgEl = document.getElementById('label-disp-mfg');
+        const expEl = document.getElementById('label-disp-exp');
+        const ingEl = document.getElementById('label-disp-ingredients');
+        const allSec = document.getElementById('label-allergens-section');
+        const allEl = document.getElementById('label-disp-allergens');
+        const stgEl = document.getElementById('label-disp-storage');
 
-        document.getElementById('label-disp-batch').textContent = batchNo || '-';
-        document.getElementById('label-disp-mfg').textContent = Utils.formatDate(mfgDate, I18n.getLang());
-        document.getElementById('label-disp-exp').textContent = Utils.formatDate(expDate, I18n.getLang());
+        if (busEl) busEl.textContent = user.businessName || user.ownerName || 'Obrador Artesanal';
+        if (titleEl) titleEl.textContent = (recipe.emoji ? recipe.emoji + ' ' : '') + recipe.name;
+        if (sanEl) sanEl.textContent = user.businessType ? 'TIPO: ' + user.businessType.toUpperCase() : 'REG. SANITARIO ARTESANO';
 
-        // Ingredients & Condiments formatted string
+        if (batchEl) batchEl.textContent = batchNo || '-';
+        if (mfgEl) mfgEl.textContent = Utils.formatDate(mfgDate, I18n.getLang());
+        if (expEl) expEl.textContent = Utils.formatDate(expDate, I18n.getLang());
+
+        // Ingredients & Condiments string
         const ingList = (recipe.ingredients || []).map(i => `${i.name}${i.qty ? ' (' + i.qty + ')' : ''}`);
-        document.getElementById('label-disp-ingredients').textContent = ingList.length > 0 ? ingList.join(', ') + '.' : 'Ingredientes propios de elaboración artesana.';
+        if (ingEl) ingEl.textContent = ingList.length > 0 ? ingList.join(', ') + '.' : 'Ingredientes propios de elaboración artesana.';
 
         // Allergens
         const allergensList = (recipe.allergens || []).map(a => (I18n.t('traceability.allergen_list.' + a) || a).toUpperCase());
-        const allergensSection = document.getElementById('label-allergens-section');
-        if (allergensList.length > 0) {
-            allergensSection.style.display = 'block';
-            document.getElementById('label-disp-allergens').innerHTML = `CONTIENE: <strong>${allergensList.join(', ')}</strong>.`;
-        } else {
-            allergensSection.style.display = 'block';
-            document.getElementById('label-disp-allergens').textContent = 'No contiene alérgenos declarados de declaración obligatoria.';
+        if (allSec && allEl) {
+            if (allergensList.length > 0) {
+                allSec.style.display = 'block';
+                allEl.innerHTML = `CONTIENE: <strong>${allergensList.join(', ')}</strong>.`;
+            } else {
+                allSec.style.display = 'block';
+                allEl.textContent = 'No contiene alérgenos declarados de declaración obligatoria.';
+            }
         }
 
         // Storage
-        document.getElementById('label-disp-storage').textContent = recipe.storageConditions || 'Conservar en lugar fresco, seco y protegido de la luz directa.';
+        if (stgEl) stgEl.textContent = recipe.storageConditions || 'Conservar en lugar fresco, seco y protegido de la luz directa.';
     }
 
     function setupEvents() {
+        if (eventsInitialized) return;
+        eventsInitialized = true;
+
         Utils.delegate(document.body, '#recipe-add, #recipe-add-empty', 'click', () => {
             editingId = null;
             document.getElementById('recipe-modal-title').textContent = I18n.t('recipes.new_recipe');
             Utils.clearForm('recipe-form');
             document.getElementById('recipe-ingredients').innerHTML = '';
             document.getElementById('recipe-steps').innerHTML = '';
-            // Add default initial ingredient rows
             addIngredientRow({ name: '', qty: '' });
             addIngredientRow({ name: '', qty: '' });
             document.querySelectorAll('#recipe-allergen-grid .allergen-item').forEach(i => {
@@ -457,7 +487,7 @@ const RecipesModule = (function() {
                 await TrazaDB.update('recipes', d);
                 Utils.showToast('success', I18n.t('app.success_update'));
             } else {
-                const created = await TrazaDB.create('recipes', d);
+                await TrazaDB.create('recipes', d);
                 Utils.showToast('success', I18n.t('app.success_save'));
             }
 
@@ -467,7 +497,7 @@ const RecipesModule = (function() {
 
         Utils.delegate(document.body, '.recipe-edit', 'click', async function(e) {
             e.stopPropagation();
-            const r = await TrazaDB.read('recipes', this.dataset.id);
+            const r = await findRecipe(this.dataset.id);
             if (!r) return;
             editingId = r.id;
             document.getElementById('recipe-modal-title').textContent = I18n.t('app.edit') + ': ' + r.name;
@@ -515,13 +545,14 @@ const RecipesModule = (function() {
         Utils.delegate(document.body, '.recipe-prod', async function(e) {
             e.stopPropagation();
             const recipeId = this.dataset.id;
-            const r = await TrazaDB.read('recipes', recipeId);
+            const r = await findRecipe(recipeId);
             if (!r) return;
 
             Utils.clearForm('recipe-prod-form');
             document.querySelector('#recipe-prod-form [name="recipeId"]').value = recipeId;
             const today = Utils.todayISO();
-            const batchNo = `LOT-${r.name.substring(0,3).toUpperCase()}-${today.replace(/-/g,'').substring(2)}`;
+            const recipeNameSanitized = (r.name || 'ART').replace(/[^a-zA-Z0-9]/g, '').substring(0, 4).toUpperCase();
+            const batchNo = `LOT-${recipeNameSanitized}-${today.replace(/-/g,'').substring(2)}`;
             document.querySelector('#recipe-prod-form [name="batchNumber"]').value = batchNo;
             document.querySelector('#recipe-prod-form [name="date"]').value = today;
             document.querySelector('#recipe-prod-form [name="expiryDate"]').value = getCalculatedExpiryISO(30);
@@ -539,7 +570,7 @@ const RecipesModule = (function() {
                 return;
             }
             d.userId = Auth.getUserId();
-            const recipe = await TrazaDB.read('recipes', d.recipeId);
+            const recipe = await findRecipe(d.recipeId);
             d.recipeName = recipe ? recipe.name : '';
             d.date = d.date ? new Date(d.date).toISOString() : Utils.nowISO();
 
@@ -557,7 +588,7 @@ const RecipesModule = (function() {
         // Open Direct Label Modal
         Utils.delegate(document.body, '.recipe-print-label-btn', async function(e) {
             e.stopPropagation();
-            const r = await TrazaDB.read('recipes', this.dataset.id);
+            const r = await findRecipe(this.dataset.id);
             if (!r) return;
             openLabelModalForRecipe(r, null);
         });
