@@ -135,7 +135,7 @@
         "dashboard": "Painel Principal",
         "traceability": "Rastreabilidade",
         "temperature": "Temperaturas",
-        "pest_control": "Controle de Pragas",
+        "pest_control": "Controlo de Pragas",
         "cleaning": "Limpeza",
         "incidents": "Incidências",
         "stock": "Estoque",
@@ -144,10 +144,15 @@
         "goods_entry": "Entradas",
         "water": "Água",
         "reports": "Relatórios",
-        "settings": "Configurações",
+        "settings": "Definições",
         "profile": "Meu Perfil",
         "collapse": "Recolher menu",
-        "expand": "Expandir menu"
+        "expand": "Expandir menu",
+        "sections": {
+            "control": "Controlo Sanitário & HACCP",
+            "management": "Gestão, Receitas & Estoque",
+            "reports": "Auditoria & Relatórios"
+        }
     },
     "dashboard": {
         "title": "Painel Principal",

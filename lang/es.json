@@ -147,7 +147,12 @@
         "settings": "Ajustes",
         "profile": "Mi Perfil",
         "collapse": "Colapsar menú",
-        "expand": "Expandir menú"
+        "expand": "Expandir menú",
+        "sections": {
+            "control": "Control Sanitario & APPCC",
+            "management": "Gestión, Recetas & Stock",
+            "reports": "Auditoría & Informes"
+        }
     },
     "dashboard": {
         "title": "Panel Principal",

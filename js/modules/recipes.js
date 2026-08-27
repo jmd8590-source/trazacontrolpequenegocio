@@ -65,14 +65,18 @@ const RecipesModule = (function() {
                                         <strong>${prodCount}</strong> ${I18n.t('recipes.productions')} registradas
                                     </p>
                                     
-                                    <div class="flex items-center justify-between gap-2 mt-4 pt-3" style="border-top: 1px solid var(--border-light); flex-wrap: wrap;">
-                                        <button class="btn btn-primary btn-sm recipe-print-label-btn" data-id="${r.id}">
+                                    <div class="mt-4 pt-3" style="border-top: 1px solid var(--border-light);">
+                                        <button class="btn btn-primary btn-block recipe-print-label-btn mb-2" data-id="${r.id}" style="font-weight: 700;">
                                             🏷️ ${I18n.t('recipes.print_label')}
                                         </button>
-                                        <div class="flex gap-1">
-                                            <button class="btn btn-secondary btn-sm recipe-prod" data-id="${r.id}" title="${I18n.t('recipes.new_production')}">🏭 Elaborar</button>
-                                            <button class="btn btn-ghost btn-sm recipe-edit" data-id="${r.id}" title="${I18n.t('app.edit')}">✏️</button>
-                                            <button class="btn btn-ghost btn-sm recipe-delete" data-id="${r.id}" title="${I18n.t('app.delete')}">🗑️</button>
+                                        <div class="flex items-center justify-between gap-1">
+                                            <button class="btn btn-secondary btn-sm recipe-prod" data-id="${r.id}" title="${I18n.t('recipes.new_production')}">
+                                                🏭 ${I18n.t('recipes.new_production')}
+                                            </button>
+                                            <div class="flex gap-1">
+                                                <button class="btn btn-ghost btn-sm recipe-edit" data-id="${r.id}" title="${I18n.t('app.edit')}">✏️</button>
+                                                <button class="btn btn-ghost btn-sm recipe-delete" data-id="${r.id}" title="${I18n.t('app.delete')}">🗑️</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

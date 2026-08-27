@@ -202,7 +202,7 @@ const App = (function() {
         }
     }
 
-    // Build sidebar navigation
+    // Build sidebar navigation (Dynamic & Animated Sections)
     function buildSidebar() {
         const nav = document.getElementById('sidebar-nav');
         if (!nav) return;
@@ -210,23 +210,22 @@ const App = (function() {
         let currentSection = '';
         let html = '';
 
-        const sectionLabels = {
-            main: '',
-            control: 'Control & APPCC',
-            management: I18n.t('app.settings') !== 'app.settings' ? 'Gestión' : 'Management',
-            reports: I18n.t('nav.reports')
-        };
-
         NAV_ITEMS.forEach(item => {
             if (item.section !== currentSection) {
                 currentSection = item.section;
-                if (sectionLabels[currentSection]) {
-                    html += `<div class="sidebar-section-label">${sectionLabels[currentSection]}</div>`;
+                if (currentSection && currentSection !== 'main') {
+                    const sectionKey = `nav.sections.${currentSection}`;
+                    html += `
+                        <div class="sidebar-section-header">
+                            <span class="sidebar-section-accent"></span>
+                            <span class="sidebar-section-label" data-i18n="${sectionKey}">${I18n.t(sectionKey)}</span>
+                        </div>
+                    `;
                 }
             }
 
             html += `
-                <button class="nav-item ${item.id === 'dashboard' ? 'active' : ''}" data-module="${item.id}">
+                <button class="nav-item ${item.id === currentModule ? 'active' : ''}" data-module="${item.id}">
                     <span class="nav-item-icon">${ICONS[item.icon] || ''}</span>
                     <span class="nav-item-text" data-i18n="${item.labelKey}">${I18n.t(item.labelKey)}</span>
                 </button>

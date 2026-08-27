@@ -147,7 +147,12 @@
         "settings": "Settings",
         "profile": "My Profile",
         "collapse": "Collapse menu",
-        "expand": "Expand menu"
+        "expand": "Expand menu",
+        "sections": {
+            "control": "Food Safety & HACCP",
+            "management": "Management, Recipes & Stock",
+            "reports": "Audit & Reports"
+        }
     },
     "dashboard": {
         "title": "Dashboard",
