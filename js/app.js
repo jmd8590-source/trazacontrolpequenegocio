@@ -147,34 +147,42 @@ const App = (function() {
 
     // Navigate to a module
     function navigateTo(moduleId) {
-        if (moduleId === currentModule) return;
+        if (!moduleId) moduleId = 'dashboard';
 
-        // Update nav state
+        // Update nav state in sidebar
         document.querySelectorAll('.nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.module === moduleId);
         });
 
-        // Update bottom nav
+        // Update bottom nav (mobile)
         document.querySelectorAll('.bottom-nav-item').forEach(item => {
             item.classList.toggle('active', item.dataset.module === moduleId);
         });
 
-        // Update page title
+        // Update top page title
         const navItem = NAV_ITEMS.find(n => n.id === moduleId);
         if (navItem) {
             const titleEl = document.getElementById('page-title');
             if (titleEl) titleEl.textContent = I18n.t(navItem.labelKey);
         }
 
-        // Hide all module pages
+        // Strictly isolate central screen: Hide ALL other module pages
         document.querySelectorAll('.module-page').forEach(page => {
+            page.style.display = 'none';
             page.classList.remove('active');
         });
 
-        // Show target module page
+        // Show ONLY the requested module page
         const targetPage = document.getElementById(`module-${moduleId}`);
         if (targetPage) {
+            targetPage.style.display = 'block';
             targetPage.classList.add('active');
+        }
+
+        // Scroll central content container to top
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.scrollTop = 0;
         }
 
         // Load module data
@@ -187,7 +195,7 @@ const App = (function() {
         // Update URL hash
         window.location.hash = moduleId;
 
-        // Close mobile menu
+        // Close mobile menu if open
         closeMobileMenu();
     }
 
@@ -344,10 +352,18 @@ const App = (function() {
             }
         });
 
-        // Logout
-        Utils.delegate(document.body, '#logout-btn', 'click', async () => {
-            await Auth.logout();
-            showAuth();
+        // Logout (from top header, sidebar or demo banner)
+        Utils.delegate(document.body, '#logout-btn, #header-logout-btn', 'click', async () => {
+            Utils.showConfirm(
+                I18n.t('auth.logout'),
+                '¿Estás seguro de que deseas salir y cerrar tu sesión?',
+                async () => {
+                    await Auth.logout();
+                    showAuth();
+                    Utils.showToast('info', 'Sesión cerrada correctamente');
+                },
+                I18n.t.bind(I18n)
+            );
         });
 
         // Hash change

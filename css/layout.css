@@ -526,6 +526,31 @@ html, body {
 }
 
 /* ============================================================
+   Module Page Isolation (Only active module is rendered/visible)
+   ============================================================ */
+.module-page {
+    display: none;
+    width: 100%;
+}
+
+.module-page.active {
+    display: block;
+    animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Header Logout Button */
+.header-logout-btn {
+    color: var(--danger) !important;
+}
+
+.header-logout-btn:hover {
+    background: var(--danger-light) !important;
+    border-color: var(--danger) !important;
+    color: var(--danger) !important;
+    transform: scale(1.06) !important;
+}
+
+/* ============================================================
    Login/Auth Screen
    ============================================================ */
 .auth-screen {
