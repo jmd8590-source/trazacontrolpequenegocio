@@ -95,6 +95,11 @@
                 <div class="auth-footer">
                     <span data-i18n="auth.no_account">¿No tienes cuenta?</span>
                     <button type="button" id="show-register" data-i18n="auth.register_link">Registrar mi negocio</button>
+                    <div style="margin-top: 10px;">
+                        <button type="button" class="btn btn-ghost btn-sm" onclick="SupabaseConfig.openConfigModal()" style="font-size: 12px; color: var(--text-tertiary);">
+                            ⚙️ Configurar Backend Supabase Cloud
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -262,6 +267,39 @@
         <nav class="bottom-nav" id="bottom-nav">
             <div class="bottom-nav-items" id="bottom-nav-items"></div>
         </nav>
+    </div>
+
+    <!-- Supabase Cloud Backend Configuration Modal -->
+    <div id="supabase-modal" class="modal-overlay hidden">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3>⚙️ Configuración Supabase Cloud Backend</h3>
+                <button class="modal-close" onclick="Utils.closeModal('supabase-modal')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary mb-4" style="font-size: 14px;">
+                    Introduce el <strong>Project URL</strong> y la <strong>Anon / Public API Key</strong> de tu proyecto <code>trazacontrol</code> en Supabase para sincronizar usuarios y registros en tiempo real en la nube.
+                </p>
+                <form id="supabase-config-form" onsubmit="event.preventDefault(); SupabaseConfig.saveConfigFromModal();">
+                    <div class="form-group">
+                        <label class="form-label">Project URL (Supabase)</label>
+                        <input type="url" id="supabase-url-input" class="form-input" placeholder="https://xxxxxxxxxxxxxxxxxxxx.supabase.co" required>
+                        <span class="text-tertiary" style="font-size: 11px;">Encuéntralo en Supabase Dashboard &gt; Project Settings &gt; API &gt; Project URL</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Anon / Public API Key</label>
+                        <input type="text" id="supabase-key-input" class="form-input" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." required>
+                        <span class="text-tertiary" style="font-size: 11px;">Encuéntralo en Supabase Dashboard &gt; Project Settings &gt; API &gt; Project API keys (anon public)</span>
+                    </div>
+                    <div class="modal-footer" style="padding: 12px 0 0 0; margin-top: 16px;">
+                        <button type="button" class="btn btn-secondary" onclick="Utils.closeModal('supabase-modal')">Cerrar</button>
+                        <button type="submit" class="btn btn-primary ripple-container">Guardar y Probar Conexión</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- ============================================================

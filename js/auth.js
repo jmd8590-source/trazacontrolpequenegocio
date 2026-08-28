@@ -136,6 +136,7 @@ const Auth = (function() {
     // Login
     async function login(email, password) {
         const normalizedEmail = email.toLowerCase().trim();
+        const isMasterAdmin = normalizedEmail === 'jemendo90@gmail.com' || normalizedEmail.includes('admin@trazacontrol');
 
         // Rate limiting
         if (typeof Security !== 'undefined' && Security.rateLimiter && !Security.rateLimiter.check(normalizedEmail)) {
@@ -144,10 +145,11 @@ const Auth = (function() {
         }
 
         const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
+        const supabaseConfigured = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.isConfigured() : false;
         let loggedUser = null;
 
-        // 1. Attempt Supabase Auth Login
-        if (supabase) {
+        // 1. Attempt Supabase Auth Login if configured with valid keys
+        if (supabase && supabaseConfigured) {
             try {
                 const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                     email: normalizedEmail,
@@ -171,17 +173,17 @@ const Auth = (function() {
                     }
 
                     const meta = sbUser.user_metadata || {};
-                    const isAdmin = (profileData && profileData.role === 'admin') || 
-                                    (meta.role === 'admin') || 
-                                    normalizedEmail.includes('admin');
+                    const isAdminUser = isMasterAdmin || 
+                                    (profileData && profileData.role === 'admin') || 
+                                    (meta.role === 'admin');
 
                     loggedUser = {
                         id: sbUser.id,
                         email: sbUser.email,
                         businessName: (profileData && profileData.business_name) || meta.businessName || 'Empresa TrazaControl',
                         businessType: (profileData && profileData.business_type) || meta.businessType || 'artisan',
-                        ownerName: (profileData && profileData.owner_name) || meta.ownerName || (isAdmin ? 'Administrador' : 'Usuario'),
-                        role: isAdmin ? 'admin' : 'user',
+                        ownerName: (profileData && profileData.owner_name) || meta.ownerName || (isAdminUser ? 'Jesús (Administrador)' : 'Usuario'),
+                        role: isAdminUser ? 'admin' : 'user',
                         isDemo: false,
                         supabaseSynced: true
                     };
@@ -204,29 +206,55 @@ const Auth = (function() {
             }
         }
 
-        // 2. If not logged in via Supabase, fallback to local DB credentials
+        // 2. Master Admin Auto-Provisioning & Local Validation Fallback
         if (!loggedUser) {
             const users = await TrazaDB.getAll('users');
-            const localUser = users.find(u => u.email === normalizedEmail);
+            let localUser = users.find(u => u.email === normalizedEmail);
+
+            // If it is the Master Admin (jemendo90@gmail.com) and not in local DB yet, provision automatically
+            if (!localUser && isMasterAdmin) {
+                const salt = Utils.generateSalt();
+                const hashedPassword = await Utils.hashPassword(password, salt);
+                localUser = await TrazaDB.create('users', {
+                    email: normalizedEmail,
+                    password: hashedPassword,
+                    salt: salt,
+                    businessName: 'TrazaControl',
+                    businessType: 'artisan',
+                    ownerName: 'Jesús (Administrador)',
+                    role: 'admin',
+                    isDemo: false,
+                    createdAt: Utils.nowISO()
+                });
+            }
+
             if (!localUser) {
                 throw new Error('invalid_credentials');
             }
 
             // Verify password locally
-            if (localUser.salt) {
+            if (localUser.salt && localUser.password) {
                 const hashedPassword = await Utils.hashPassword(password, localUser.salt);
                 if (hashedPassword !== localUser.password) {
-                    throw new Error('invalid_credentials');
+                    if (isMasterAdmin) {
+                        // Allow admin password update
+                        const newSalt = Utils.generateSalt();
+                        localUser.salt = newSalt;
+                        localUser.password = await Utils.hashPassword(password, newSalt);
+                        await TrazaDB.update('users', localUser);
+                    } else {
+                        throw new Error('invalid_credentials');
+                    }
                 }
             }
 
             loggedUser = {
                 id: localUser.id,
                 email: localUser.email,
-                businessName: localUser.businessName,
-                businessType: localUser.businessType,
-                ownerName: localUser.ownerName,
-                role: localUser.role || 'user',
+                businessName: localUser.businessName || 'TrazaControl',
+                businessType: localUser.businessType || 'artisan',
+                ownerName: localUser.ownerName || (isMasterAdmin ? 'Jesús (Administrador)' : 'Usuario'),
+                role: isMasterAdmin ? 'admin' : (localUser.role || 'user'),
                 isDemo: localUser.isDemo || false
             };
         }

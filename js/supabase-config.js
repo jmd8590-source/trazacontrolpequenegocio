@@ -10,10 +10,9 @@ const SupabaseConfig = (function() {
     const STORAGE_URL_KEY = 'trazacontrol_supabase_url';
     const STORAGE_KEY_KEY = 'trazacontrol_supabase_anon_key';
 
-    // Default configuration (Fallback / Preset)
-    // Note: Can be overridden at runtime via Settings or localStorage
+    // Preset Project Credentials (Organization: jmd8590-source's Org / Project: trazacontrol)
     const DEFAULT_URL = window.TRAZACONTROL_SUPABASE_URL || 'https://hllehaidwdhmoqkaegoy.supabase.co';
-    const DEFAULT_KEY = window.TRAZACONTROL_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsbGVoYWlkd2RobW9xa2FlZ295Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDkzNDU2MDAsImV4cCI6MjAyNDkyMTYwMH0.public_placeholder';
+    const DEFAULT_KEY = window.TRAZACONTROL_SUPABASE_ANON_KEY || '';
 
     let clientInstance = null;
     let isConnected = false;
@@ -29,8 +28,8 @@ const SupabaseConfig = (function() {
     function setCredentials(url, key) {
         if (url) localStorage.setItem(STORAGE_URL_KEY, url.trim());
         if (key) localStorage.setItem(STORAGE_KEY_KEY, key.trim());
-        clientInstance = null; // Re-initialize client
-        initClient();
+        clientInstance = null;
+        return initClient();
     }
 
     function initClient() {
@@ -39,7 +38,7 @@ const SupabaseConfig = (function() {
 
         if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
             try {
-                if (url && key && url.startsWith('http')) {
+                if (url && key && url.startsWith('http') && !key.includes('placeholder')) {
                     clientInstance = window.supabase.createClient(url, key, {
                         auth: {
                             persistSession: true,
@@ -50,7 +49,7 @@ const SupabaseConfig = (function() {
                     return clientInstance;
                 }
             } catch (err) {
-                console.warn('[Supabase] Init warning:', err.message);
+                console.warn('[Supabase] Init notice:', err.message);
             }
         }
         return null;
@@ -66,20 +65,19 @@ const SupabaseConfig = (function() {
     function isConfigured() {
         const url = getUrl();
         const key = getAnonKey();
-        return Boolean(url && key && url.startsWith('http') && !key.includes('placeholder'));
+        return Boolean(url && key && url.startsWith('http') && !key.includes('placeholder') && key.length > 20);
     }
 
     async function testConnection() {
         const client = getClient();
-        if (!client) return { ok: false, error: 'Supabase client not initialized' };
+        if (!client) return { ok: false, error: 'Cliente de Supabase no configurado' };
 
         try {
             const { data, error } = await client.from('profiles').select('count', { count: 'exact', head: true });
             if (error && error.code !== 'PGRST116') {
-                // Auth error or connection error
                 if (error.message && error.message.includes('FetchError')) {
                     isConnected = false;
-                    return { ok: false, error: error.message };
+                    return { ok: false, error: 'Error de red al conectar con Supabase' };
                 }
             }
             isConnected = true;
@@ -90,12 +88,52 @@ const SupabaseConfig = (function() {
         }
     }
 
+    function openConfigModal() {
+        const modal = document.getElementById('supabase-modal');
+        if (!modal) return;
+        const urlInput = document.getElementById('supabase-url-input');
+        const keyInput = document.getElementById('supabase-key-input');
+        if (urlInput) urlInput.value = getUrl() || '';
+        if (keyInput) keyInput.value = getAnonKey() || '';
+        if (typeof Utils !== 'undefined') {
+            Utils.openModal('supabase-modal');
+        } else {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    async function saveConfigFromModal() {
+        const urlInput = document.getElementById('supabase-url-input');
+        const keyInput = document.getElementById('supabase-key-input');
+        const url = urlInput ? urlInput.value.trim() : '';
+        const key = keyInput ? keyInput.value.trim() : '';
+
+        if (!url || !key) {
+            if (typeof Utils !== 'undefined') Utils.showToast('error', 'Debes rellenar URL y Clave Anon');
+            return;
+        }
+
+        setCredentials(url, key);
+        const res = await testConnection();
+
+        if (typeof Utils !== 'undefined') {
+            if (res.ok) {
+                Utils.showToast('success', 'Conexión con Supabase verificada correctamente');
+            } else {
+                Utils.showToast('info', 'Credenciales guardadas. Verificación: ' + (res.error || 'Listo'));
+            }
+            Utils.closeModal('supabase-modal');
+        }
+    }
+
     return {
         getClient,
         getUrl,
         getAnonKey,
         setCredentials,
         isConfigured,
-        testConnection
+        testConnection,
+        openConfigModal,
+        saveConfigFromModal
     };
 })();
