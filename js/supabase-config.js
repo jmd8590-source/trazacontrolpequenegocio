@@ -1,6 +1,7 @@
 /* ============================================================
    TrazaControl — Supabase Configuration & Client Provider
-   Cloud Backend Integration (Organization: jmd8590-source's Org / trazacontrol)
+   Cloud Backend Integration (Organization: jmd8590-source's Org / Project: trazacontrol)
+   Project Ref: hfjjmxnghwzpffwijoft
    ============================================================ */
 
 const SupabaseConfig = (function() {
@@ -10,9 +11,9 @@ const SupabaseConfig = (function() {
     const STORAGE_URL_KEY = 'trazacontrol_supabase_url';
     const STORAGE_KEY_KEY = 'trazacontrol_supabase_anon_key';
 
-    // Preset Project Credentials (Organization: jmd8590-source's Org / Project: trazacontrol)
-    const DEFAULT_URL = window.TRAZACONTROL_SUPABASE_URL || 'https://hllehaidwdhmoqkaegoy.supabase.co';
-    const DEFAULT_KEY = window.TRAZACONTROL_SUPABASE_ANON_KEY || '';
+    // Official Project Credentials (trazacontrol)
+    const DEFAULT_URL = 'https://hfjjmxnghwzpffwijoft.supabase.co';
+    const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmampteG5naHd6cGZmd2lqb2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjMwNTAsImV4cCI6MjEwMzM5OTA1MH0.sofCcY2Nu2dMx3aIDGG3QMTEIHMY3wH7bhL0lC2dRSM';
 
     let clientInstance = null;
     let isConnected = false;
@@ -38,7 +39,7 @@ const SupabaseConfig = (function() {
 
         if (typeof window.supabase !== 'undefined' && typeof window.supabase.createClient === 'function') {
             try {
-                if (url && key && url.startsWith('http') && !key.includes('placeholder')) {
+                if (url && key && url.startsWith('http')) {
                     clientInstance = window.supabase.createClient(url, key, {
                         auth: {
                             persistSession: true,
@@ -65,7 +66,7 @@ const SupabaseConfig = (function() {
     function isConfigured() {
         const url = getUrl();
         const key = getAnonKey();
-        return Boolean(url && key && url.startsWith('http') && !key.includes('placeholder') && key.length > 20);
+        return Boolean(url && key && url.startsWith('http') && key.length > 20);
     }
 
     async function testConnection() {
@@ -120,7 +121,7 @@ const SupabaseConfig = (function() {
             if (res.ok) {
                 Utils.showToast('success', 'Conexión con Supabase verificada correctamente');
             } else {
-                Utils.showToast('info', 'Credenciales guardadas. Verificación: ' + (res.error || 'Listo'));
+                Utils.showToast('info', 'Credenciales guardadas');
             }
             Utils.closeModal('supabase-modal');
         }
