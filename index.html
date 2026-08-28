@@ -15,11 +15,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS Design System -->
-    <link rel="stylesheet" href="css/main.css?v=20260827_FINAL4">
-    <link rel="stylesheet" href="css/animations.css?v=20260827_FINAL4">
-    <link rel="stylesheet" href="css/components.css?v=20260827_FINAL4">
-    <link rel="stylesheet" href="css/layout.css?v=20260827_FINAL4">
-    <link rel="stylesheet" href="css/modules.css?v=20260827_FINAL4">
+    <link rel="stylesheet" href="css/main.css?v=20260827_MOBILE_PERFECT">
+    <link rel="stylesheet" href="css/animations.css?v=20260827_MOBILE_PERFECT">
+    <link rel="stylesheet" href="css/components.css?v=20260827_MOBILE_PERFECT">
+    <link rel="stylesheet" href="css/layout.css?v=20260827_MOBILE_PERFECT">
+    <link rel="stylesheet" href="css/modules.css?v=20260827_MOBILE_PERFECT">
 </head>
 <body>
 
@@ -166,7 +166,7 @@
     <div id="app-container" class="app-container">
 
         <!-- Mobile Dimmer Overlay -->
-        <div id="sidebar-overlay" class="sidebar-overlay"></div>
+        <div id="sidebar-overlay" class="sidebar-overlay" onclick="App.closeMobileMenu()"></div>
 
         <!-- Sidebar Navigation -->
         <aside id="sidebar" class="sidebar">
@@ -210,7 +210,7 @@
             <!-- Top Sticky Glass Header -->
             <header class="top-header">
                 <div class="top-header-left">
-                    <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir Menú">
+                    <button class="mobile-menu-btn" id="mobile-menu-btn" onclick="App.toggleMobileMenu()" aria-label="Abrir Menú">
                         <div class="hamburger">
                             <span class="hamburger-line"></span>
                             <span class="hamburger-line"></span>
@@ -267,39 +267,43 @@
     <!-- ============================================================
          SCRIPTS: Core Libraries & Modules (Loaded in dependency order)
          ============================================================ -->
+    <!-- 0. Supabase Backend SDK & Configuration -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js?v=20260828_SUPABASE"></script>
+
     <!-- 1. Database & Persistence Layer -->
-    <script src="js/db.js?v=20260827_FINAL4"></script>
+    <script src="js/db.js?v=20260828_SUPABASE"></script>
 
     <!-- 2. Utilities & Helper Functions -->
-    <script src="js/utils.js?v=20260827_FINAL4"></script>
+    <script src="js/utils.js?v=20260827_MOBILE_PERFECT"></script>
 
     <!-- 3. Internationalization Engine (ES/PT/EN) -->
-    <script src="js/i18n.js?v=20260827_FINAL4"></script>
+    <script src="js/i18n.js?v=20260827_MOBILE_PERFECT"></script>
 
     <!-- 4. Security & Anti-Inspection Shield -->
-    <script src="js/security.js?v=20260827_FINAL4"></script>
+    <script src="js/security.js?v=20260827_MOBILE_PERFECT"></script>
 
     <!-- 5. User Authentication & Session Engine -->
-    <script src="js/auth.js?v=20260827_FINAL4"></script>
+    <script src="js/auth.js?v=20260827_MOBILE_PERFECT"></script>
 
     <!-- 6. Demo Dataset Generator -->
-    <script src="js/demo-data.js?v=20260827_FINAL4"></script>
+    <script src="js/demo-data.js?v=20260827_MOBILE_PERFECT"></script>
 
     <!-- 7. Functional Business Modules -->
-    <script src="js/modules/dashboard.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/traceability.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/temperature.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/pest-control.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/cleaning.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/water.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/incidents.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/stock.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/recipes.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/suppliers.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/goods-entry.js?v=20260827_FINAL4"></script>
-    <script src="js/modules/reports.js?v=20260827_FINAL4"></script>
+    <script src="js/modules/dashboard.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/traceability.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/temperature.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/pest-control.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/cleaning.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/water.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/incidents.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/stock.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/recipes.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/suppliers.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/goods-entry.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/reports.js?v=20260827_MOBILE_PERFECT"></script>
 
     <!-- 8. Master Application Orchestrator & Router -->
-    <script src="js/app.js?v=20260827_FINAL4"></script>
+    <script src="js/app.js?v=20260827_MOBILE_PERFECT"></script>
 </body>
 </html>

@@ -1048,3 +1048,102 @@
         margin: 0;
     }
 }
+
+/* ============================================================
+   Mobile Module Layout Overrides
+   ============================================================ */
+@media (max-width: 768px) {
+    .dashboard-kpis {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-4) !important;
+    }
+
+    .temp-points-grid,
+    .cleaning-schedule-grid,
+    .pest-points-grid,
+    .recipe-grid {
+        grid-template-columns: 1fr !important;
+        gap: var(--space-4) !important;
+    }
+
+    .pest-company-card {
+        flex-direction: column !important;
+        text-align: center !important;
+        gap: var(--space-4) !important;
+        padding: var(--space-4) !important;
+    }
+
+    .sanitary-label-container {
+        padding: 10px !important;
+    }
+
+    .label-grid-row {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+    }
+
+    .label-header-row {
+        flex-direction: column !important;
+        gap: 6px !important;
+    }
+
+    .label-sanitary-badge {
+        text-align: left !important;
+    }
+
+    .table-container {
+        border-radius: var(--radius-md);
+        margin-bottom: var(--space-4);
+    }
+}
+
+/* Landscape Mode Module Tweaks */
+@media (orientation: landscape) and (max-height: 600px) {
+    .dashboard-kpis {
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .card-kpi {
+        padding: var(--space-3) !important;
+    }
+
+    .card-kpi .kpi-icon {
+        width: 38px !important;
+        height: 38px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .card-kpi .kpi-icon svg {
+        width: 20px !important;
+        height: 20px !important;
+    }
+
+    .card-kpi .kpi-value {
+        font-size: var(--text-2xl) !important;
+    }
+
+    .card-kpi .kpi-label {
+        font-size: var(--text-xs) !important;
+    }
+
+    .temp-points-grid,
+    .cleaning-schedule-grid,
+    .pest-points-grid,
+    .recipe-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 12px !important;
+    }
+}
+
+

@@ -1,6 +1,6 @@
 /* ============================================================
-   TrazaControl — IndexedDB Database Layer
-   Persistent storage wrapper with encryption support
+   TrazaControl — Hybrid Database Layer (IndexedDB + Supabase Cloud Sync)
+   Persistent local storage with background cloud synchronization
    ============================================================ */
 
 const TrazaDB = (function() {
@@ -33,6 +33,49 @@ const TrazaDB = (function() {
         water_readings: { keyPath: 'id', indexes: ['userId', 'pointId', 'date'] },
         settings: { keyPath: 'id', indexes: ['userId'] }
     };
+
+    // Helper: Convert object keys from camelCase to snake_case for Supabase SQL
+    function toSnakeCase(obj) {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+        const n = {};
+        for (const [k, v] of Object.entries(obj)) {
+            const sk = k.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+            n[sk] = v;
+        }
+        return n;
+    }
+
+    // Helper: Convert object keys from snake_case to camelCase
+    function toCamelCase(obj) {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+        const n = {};
+        for (const [k, v] of Object.entries(obj)) {
+            const ck = k.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+            n[ck] = v;
+        }
+        return n;
+    }
+
+    // Supabase Cloud Sync helper
+    async function syncToSupabase(action, storeName, record, id) {
+        try {
+            if (typeof Auth === 'undefined' || Auth.isDemoMode()) return;
+            const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
+            if (!supabase) return;
+
+            // Map storeName to Supabase table if needed
+            const tableName = storeName;
+            const snakeRecord = toSnakeCase(record);
+
+            if (action === 'insert' || action === 'update') {
+                await supabase.from(tableName).upsert(snakeRecord);
+            } else if (action === 'delete') {
+                await supabase.from(tableName).delete().eq('id', id);
+            }
+        } catch (err) {
+            console.warn(`[TrazaDB] Background Supabase sync (${action} ${storeName}) notice:`, err.message);
+        }
+    }
 
     // Generate unique ID
     function generateId() {
@@ -95,7 +138,11 @@ const TrazaDB = (function() {
             const store = getStore(storeName, 'readwrite');
             const request = store.add(record);
 
-            request.onsuccess = () => resolve(record);
+            request.onsuccess = () => {
+                // Trigger async background sync to Supabase
+                syncToSupabase('insert', storeName, record, record.id);
+                resolve(record);
+            };
             request.onerror = () => reject(request.error);
         });
     }
@@ -122,7 +169,11 @@ const TrazaDB = (function() {
             const store = getStore(storeName, 'readwrite');
             const request = store.put(record);
 
-            request.onsuccess = () => resolve(record);
+            request.onsuccess = () => {
+                // Trigger async background sync to Supabase
+                syncToSupabase('update', storeName, record, record.id);
+                resolve(record);
+            };
             request.onerror = () => reject(request.error);
         });
     }
@@ -133,7 +184,11 @@ const TrazaDB = (function() {
             const store = getStore(storeName, 'readwrite');
             const request = store.delete(id);
 
-            request.onsuccess = () => resolve(true);
+            request.onsuccess = () => {
+                // Trigger async background sync to Supabase
+                syncToSupabase('delete', storeName, null, id);
+                resolve(true);
+            };
             request.onerror = () => reject(request.error);
         });
     }
@@ -186,6 +241,39 @@ const TrazaDB = (function() {
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
         });
+    }
+
+    // Pull and synchronize all cloud data from Supabase for a given user
+    async function syncFromCloud(userId) {
+        if (!userId || (typeof Auth !== 'undefined' && Auth.isDemoMode())) return false;
+        const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
+        if (!supabase) return false;
+
+        try {
+            const storesToSync = Object.keys(STORES).filter(s => s !== 'users');
+            for (const storeName of storesToSync) {
+                const { data, error } = await supabase
+                    .from(storeName)
+                    .select('*')
+                    .eq('user_id', userId);
+
+                if (!error && data && data.length > 0) {
+                    for (const row of data) {
+                        const camelRow = toCamelCase(row);
+                        const existing = await read(storeName, camelRow.id);
+                        if (existing) {
+                            await update(storeName, camelRow);
+                        } else {
+                            await create(storeName, camelRow);
+                        }
+                    }
+                }
+            }
+            return true;
+        } catch (e) {
+            console.warn('[TrazaDB] syncFromCloud warning:', e.message);
+            return false;
+        }
     }
 
     // Export all data for a user
@@ -331,6 +419,7 @@ const TrazaDB = (function() {
         getByUser,
         clearStore,
         count,
+        syncFromCloud,
         exportUserData,
         importUserData,
         exportToJSON,

@@ -122,6 +122,7 @@ const I18n = (function() {
     function translatePage() {
         // Text content
         document.querySelectorAll('[data-i18n]').forEach(el => {
+            if (el.children.length > 0) return; // Protect parent containers with child icons/spans
             const key = el.getAttribute('data-i18n');
             const translation = t(key);
             if (translation && translation !== key) {

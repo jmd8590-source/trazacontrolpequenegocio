@@ -139,6 +139,11 @@ const App = (function() {
         // Update user info in sidebar
         updateUserInfo();
 
+        // Background cloud sync from Supabase for real accounts
+        if (typeof Auth !== 'undefined' && !Auth.isDemoMode() && Auth.getUserId()) {
+            TrazaDB.syncFromCloud(Auth.getUserId()).catch(() => {});
+        }
+
         // Navigate to dashboard
         navigateTo('dashboard');
     }
@@ -163,14 +168,12 @@ const App = (function() {
     function navigateTo(moduleId) {
         if (!moduleId) moduleId = 'dashboard';
 
-        // Update nav state in sidebar
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.module === moduleId);
+        // Update active nav items across sidebar and mobile bottom nav
+        document.querySelectorAll('.nav-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.module === moduleId);
         });
-
-        // Update bottom nav (mobile)
-        document.querySelectorAll('.bottom-nav-item').forEach(item => {
-            item.classList.toggle('active', item.dataset.module === moduleId);
+        document.querySelectorAll('.bottom-nav-item').forEach(el => {
+            el.classList.toggle('active', el.dataset.module === moduleId);
         });
 
         // Update top page title
@@ -244,7 +247,7 @@ const App = (function() {
             }
 
             html += `
-                <button class="nav-item ${item.id === currentModule ? 'active' : ''}" data-module="${item.id}">
+                <button type="button" class="nav-item ${item.id === currentModule ? 'active' : ''}" data-module="${item.id}" onclick="App.navigateTo('${item.id}')">
                     <span class="nav-item-icon">${ICONS[item.icon] || ''}</span>
                     <span class="nav-item-text" data-i18n="${item.labelKey}">${I18n.t(item.labelKey)}</span>
                 </button>
@@ -264,16 +267,16 @@ const App = (function() {
         BOTTOM_NAV_ITEMS.forEach(itemId => {
             if (itemId === 'more') {
                 html += `
-                    <button class="bottom-nav-item bottom-nav-item-more" data-module="more" id="bottom-nav-more">
+                    <button type="button" class="bottom-nav-item bottom-nav-item-more" data-module="more" id="bottom-nav-more" onclick="App.toggleMobileMenu()">
                         ${ICONS.more}
-                        <span>Más</span>
+                        <span data-i18n="nav.more">${I18n.t('nav.more') || 'Más'}</span>
                     </button>
                 `;
             } else {
                 const navItem = NAV_ITEMS.find(n => n.id === itemId);
                 if (navItem) {
                     html += `
-                        <button class="bottom-nav-item ${itemId === 'dashboard' ? 'active' : ''}" data-module="${itemId}">
+                        <button type="button" class="bottom-nav-item ${itemId === currentModule ? 'active' : ''}" data-module="${itemId}" onclick="App.navigateTo('${itemId}')">
                             ${ICONS[navItem.icon] || ''}
                             <span data-i18n="${navItem.labelKey}">${I18n.t(navItem.labelKey)}</span>
                         </button>
@@ -318,25 +321,11 @@ const App = (function() {
         // Demo button
         Utils.delegate(document.body, '#demo-btn', 'click', handleDemo);
 
-        // Sidebar navigation
-        Utils.delegate(document.body, '.nav-item[data-module]', 'click', function() {
-            navigateTo(this.dataset.module);
-        });
-
-        // Bottom navigation
-        Utils.delegate(document.body, '.bottom-nav-item[data-module]', 'click', function() {
-            const moduleId = this.dataset.module;
-            if (moduleId === 'more') {
-                toggleMobileMenu();
-            } else {
-                navigateTo(moduleId);
-            }
-        });
-
-        // Mobile menu button
+        // Mobile menu & sidebar overlay
         Utils.delegate(document.body, '#mobile-menu-btn', 'click', toggleMobileMenu);
+        Utils.delegate(document.body, '#sidebar-overlay', 'click', closeMobileMenu);
+        Utils.delegate(document.body, '#sidebar-toggle', 'click', toggleSidebar);
 
-        // Sidebar overlay (close on click)
         // Theme toggle (Dark / Light Mode)
         Utils.delegate(document.body, '#theme-toggle-btn, #auth-theme-toggle-btn', 'click', toggleTheme);
 
@@ -499,15 +488,18 @@ const App = (function() {
     function toggleMobileMenu() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
+        if (!sidebar || !overlay) return;
 
         mobileMenuOpen = !mobileMenuOpen;
 
         if (mobileMenuOpen) {
             sidebar.classList.add('mobile-open');
             overlay.classList.add('mobile-open');
+            overlay.style.display = 'block';
         } else {
             sidebar.classList.remove('mobile-open');
             overlay.classList.remove('mobile-open');
+            overlay.style.display = 'none';
         }
     }
 
@@ -515,10 +507,12 @@ const App = (function() {
     function closeMobileMenu() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('sidebar-overlay');
+        if (!sidebar || !overlay) return;
 
         mobileMenuOpen = false;
         sidebar.classList.remove('mobile-open');
         overlay.classList.remove('mobile-open');
+        overlay.style.display = 'none';
     }
 
     // Toggle sidebar collapse (desktop)
@@ -541,6 +535,8 @@ const App = (function() {
         navigateTo,
         registerModule,
         changeLanguage,
+        toggleMobileMenu,
+        closeMobileMenu,
         getIcon,
         buildSidebar,
         buildBottomNav,
