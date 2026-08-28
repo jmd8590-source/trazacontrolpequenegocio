@@ -258,7 +258,19 @@ const Utils = (function() {
     }
 
     // ---- Confirm Dialog ----
-    function showConfirm(title, description, onConfirm, t) {
+    function showConfirm(title, description, onConfirm, t, options) {
+        let confirmText = t ? (t('app.delete') || 'Eliminar') : 'Eliminar';
+        let cancelText = t ? (t('app.cancel') || 'Cancelar') : 'Cancelar';
+        let confirmClass = 'btn-danger';
+
+        if (typeof options === 'string') {
+            confirmText = options;
+        } else if (options && typeof options === 'object') {
+            if (options.confirmText) confirmText = options.confirmText;
+            if (options.cancelText) cancelText = options.cancelText;
+            if (options.confirmClass) confirmClass = options.confirmClass;
+        }
+
         const overlay = document.createElement('div');
         overlay.className = 'modal-overlay modal-overlay-enter';
         overlay.innerHTML = `
@@ -277,8 +289,8 @@ const Utils = (function() {
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-secondary cancel-btn">${t ? t('app.cancel') : 'Cancelar'}</button>
-                    <button class="btn btn-danger confirm-btn">${t ? t('app.delete') : 'Eliminar'}</button>
+                    <button class="btn btn-secondary cancel-btn">${cancelText}</button>
+                    <button class="btn ${confirmClass} confirm-btn">${confirmText}</button>
                 </div>
             </div>
         `;

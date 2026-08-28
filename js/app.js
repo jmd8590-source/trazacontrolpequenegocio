@@ -332,14 +332,19 @@ const App = (function() {
         // Logout
         Utils.delegate(document.body, '#logout-btn, #header-logout-btn', 'click', async () => {
             Utils.showConfirm(
-                I18n.t('auth.logout'),
+                I18n.t('auth.logout') || 'Cerrar sesión',
                 '¿Estás seguro de que deseas salir y cerrar tu sesión?',
                 async () => {
                     await Auth.logout();
                     showAuth();
                     Utils.showToast('info', 'Sesión cerrada correctamente');
                 },
-                I18n.t.bind(I18n)
+                I18n.t.bind(I18n),
+                {
+                    confirmText: I18n.t('app.exit') || 'Salir',
+                    cancelText: I18n.t('app.cancel') || 'Cancelar',
+                    confirmClass: 'btn-danger'
+                }
             );
         });
 
