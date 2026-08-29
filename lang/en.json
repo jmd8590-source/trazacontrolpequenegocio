@@ -1,6 +1,8 @@
 {
     "app": {
+        "title": "TrazaControl",
         "name": "TrazaControl",
+        "app_name": "TrazaControl",
         "tagline": "Traceability and compliance for artisans",
         "demo_banner": "DEMO MODE — Data is sample only and will reset on exit",
         "loading": "Loading...",
@@ -33,7 +35,7 @@
         "notes": "Notes",
         "responsible": "Responsible",
         "description": "Description",
-        "name": "Name",
+        "item_name": "Name",
         "category": "Category",
         "quantity": "Quantity",
         "unit": "Unit",

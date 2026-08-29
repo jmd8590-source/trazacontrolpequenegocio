@@ -1,6 +1,8 @@
 {
     "app": {
+        "title": "TrazaControl",
         "name": "TrazaControl",
+        "app_name": "TrazaControl",
         "tagline": "Trazabilidad y cumplimiento para artesanos",
         "demo_banner": "MODO DEMO — Los datos son de ejemplo y se resetearán al salir",
         "loading": "Cargando...",
@@ -33,7 +35,7 @@
         "notes": "Observaciones",
         "responsible": "Responsable",
         "description": "Descripción",
-        "name": "Nombre",
+        "item_name": "Nombre",
         "category": "Categoría",
         "quantity": "Cantidad",
         "unit": "Unidad",

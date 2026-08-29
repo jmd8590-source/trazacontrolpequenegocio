@@ -362,6 +362,58 @@
     border-color: var(--success);
 }
 
+/* Secure Masked Password Field (Shields from unencrypted HTTP mobile heuristics) */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-wrapper .form-input {
+    padding-right: 42px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--text-tertiary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+    transition: color var(--duration-fast) var(--ease-out);
+    z-index: 2;
+}
+
+.password-toggle-btn:hover {
+    color: var(--primary);
+}
+
+.password-toggle-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.form-input.password-mask {
+    -webkit-text-security: disc !important;
+    text-security: disc !important;
+    font-family: inherit;
+    letter-spacing: 0.12em;
+}
+
+.form-input.password-mask.revealed {
+    -webkit-text-security: none !important;
+    text-security: none !important;
+    letter-spacing: normal;
+}
+
 .form-textarea {
     min-height: 100px;
     resize: vertical;

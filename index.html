@@ -15,11 +15,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- CSS Design System -->
-    <link rel="stylesheet" href="css/main.css?v=20260827_MOBILE_PERFECT">
-    <link rel="stylesheet" href="css/animations.css?v=20260827_MOBILE_PERFECT">
-    <link rel="stylesheet" href="css/components.css?v=20260827_MOBILE_PERFECT">
-    <link rel="stylesheet" href="css/layout.css?v=20260827_MOBILE_PERFECT">
-    <link rel="stylesheet" href="css/modules.css?v=20260827_MOBILE_PERFECT">
+    <link rel="stylesheet" href="css/main.css?v=20260829_SECURE_AUTH">
+    <link rel="stylesheet" href="css/animations.css?v=20260829_SECURE_AUTH">
+    <link rel="stylesheet" href="css/components.css?v=20260829_SECURE_AUTH">
+    <link rel="stylesheet" href="css/layout.css?v=20260829_SECURE_AUTH">
+    <link rel="stylesheet" href="css/modules.css?v=20260829_SECURE_AUTH">
 </head>
 <body>
 
@@ -72,7 +72,12 @@
 
                     <div class="form-group">
                         <label class="form-label" data-i18n="auth.password">Contraseña</label>
-                        <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                        <div class="password-wrapper">
+                            <input type="text" id="login-password" class="form-input password-mask" placeholder="••••••••" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
+                            <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('login-password', this)" title="Mostrar / Ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.login_btn">
@@ -144,11 +149,21 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label" data-i18n="auth.password">Contraseña</label>
-                            <input type="password" id="register-password" class="form-input" placeholder="Mín. 8 caracteres" required autocomplete="new-password">
+                            <div class="password-wrapper">
+                                <input type="text" id="register-password" class="form-input password-mask" placeholder="Mín. 8 caracteres" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
+                                <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('register-password', this)" title="Mostrar / Ocultar contraseña">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label class="form-label" data-i18n="auth.confirm_password">Confirmar Contraseña</label>
-                            <input type="password" id="register-confirm-password" class="form-input" placeholder="Repite contraseña" required autocomplete="new-password">
+                            <div class="password-wrapper">
+                                <input type="text" id="register-confirm-password" class="form-input password-mask" placeholder="Repite contraseña" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
+                                <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('register-confirm-password', this)" title="Mostrar / Ocultar contraseña">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -313,35 +328,35 @@
     <script src="js/db.js?v=20260828_SUPABASE"></script>
 
     <!-- 2. Utilities & Helper Functions -->
-    <script src="js/utils.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/utils.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 3. Internationalization Engine (ES/PT/EN) -->
-    <script src="js/i18n.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/i18n.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 4. Security & Anti-Inspection Shield -->
-    <script src="js/security.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/security.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 5. User Authentication & Session Engine -->
-    <script src="js/auth.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/auth.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 6. Demo Dataset Generator -->
-    <script src="js/demo-data.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/demo-data.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 7. Functional Business Modules -->
-    <script src="js/modules/dashboard.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/traceability.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/temperature.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/pest-control.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/cleaning.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/water.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/incidents.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/stock.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/recipes.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/suppliers.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/goods-entry.js?v=20260827_MOBILE_PERFECT"></script>
-    <script src="js/modules/reports.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/modules/dashboard.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/traceability.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/temperature.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/pest-control.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/cleaning.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/water.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/incidents.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/stock.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/recipes.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/suppliers.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/goods-entry.js?v=20260829_SECURE_AUTH"></script>
+    <script src="js/modules/reports.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 8. Master Application Orchestrator & Router -->
-    <script src="js/app.js?v=20260827_MOBILE_PERFECT"></script>
+    <script src="js/app.js?v=20260829_SECURE_AUTH"></script>
 </body>
 </html>
