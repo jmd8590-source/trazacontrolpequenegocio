@@ -75,9 +75,6 @@ const App = (function() {
             // Init i18n
             await I18n.init();
 
-            // Init security
-            Security.init();
-
             // Init auth
             await Auth.init();
 
@@ -119,16 +116,64 @@ const App = (function() {
         document.getElementById('auth-screen').classList.add('active');
         document.getElementById('app-container').classList.remove('active');
 
+        const loginCard = document.getElementById('login-form-container');
+        const registerCard = document.getElementById('register-form-container');
+        const forgotCard = document.getElementById('forgot-form-container');
+
+        if (loginCard) loginCard.classList.add('hidden');
+        if (registerCard) registerCard.classList.add('hidden');
+        if (forgotCard) forgotCard.classList.add('hidden');
+
         if (view === 'register') {
-            document.getElementById('login-form-container').classList.add('hidden');
-            document.getElementById('register-form-container').classList.remove('hidden');
+            if (registerCard) registerCard.classList.remove('hidden');
+        } else if (view === 'forgot') {
+            if (forgotCard) forgotCard.classList.remove('hidden');
         } else {
-            document.getElementById('login-form-container').classList.remove('hidden');
-            document.getElementById('register-form-container').classList.add('hidden');
+            if (loginCard) loginCard.classList.remove('hidden');
         }
+
+        renderTurnstiles();
 
         // Live translate auth screen elements
         I18n.translatePage();
+    }
+
+    // Render Cloudflare Turnstile widgets
+    function renderTurnstiles() {
+        if (typeof window.turnstile === 'undefined' || !window.turnstile.render) {
+            // If turnstile script still loading, retry once ready
+            setTimeout(() => {
+                if (typeof window.turnstile !== 'undefined' && window.turnstile.render) renderTurnstiles();
+            }, 800);
+            return;
+        }
+        const sitekey = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getTurnstileSiteKey() : '1x00000000000000000000AA';
+
+        ['login-turnstile', 'register-turnstile', 'forgot-turnstile'].forEach(id => {
+            const container = document.getElementById(id);
+            if (container && !container.dataset.turnstileRendered) {
+                try {
+                    window.turnstile.render('#' + id, {
+                        sitekey: sitekey,
+                        theme: currentTheme === 'dark' ? 'dark' : 'light'
+                    });
+                    container.dataset.turnstileRendered = 'true';
+                } catch (e) {
+                    console.warn('[Turnstile] render notice:', e);
+                }
+            }
+        });
+    }
+
+    function getTurnstileToken(containerId) {
+        if (typeof window.turnstile !== 'undefined' && window.turnstile.getResponse) {
+            try {
+                return window.turnstile.getResponse('#' + containerId) || null;
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     // Show main app
@@ -314,9 +359,23 @@ const App = (function() {
             registerForm.addEventListener('submit', handleRegister);
         }
 
-        // Show register
+        // Forgot password form
+        const forgotForm = document.getElementById('forgot-form');
+        if (forgotForm) {
+            forgotForm.addEventListener('submit', handleForgotPassword);
+        }
+
+        // Update password modal form
+        const updatePasswordForm = document.getElementById('update-password-form');
+        if (updatePasswordForm) {
+            updatePasswordForm.addEventListener('submit', handleUpdatePassword);
+        }
+
+        // Show auth view toggles
         Utils.delegate(document.body, '#show-register', 'click', () => showAuth('register'));
         Utils.delegate(document.body, '#show-login', 'click', () => showAuth('login'));
+        Utils.delegate(document.body, '#show-forgot-password', 'click', () => showAuth('forgot'));
+        Utils.delegate(document.body, '#show-login-from-forgot', 'click', () => showAuth('login'));
 
         // Demo button
         Utils.delegate(document.body, '#demo-btn', 'click', handleDemo);
@@ -412,8 +471,10 @@ const App = (function() {
             return;
         }
 
+        const captchaToken = getTurnstileToken('login-turnstile');
+
         try {
-            await Auth.login(email, password);
+            await Auth.login(email, password, captchaToken);
             if (errorEl) errorEl.textContent = '';
             showApp();
             Utils.showToast('success', I18n.t('auth.welcome_back'));
@@ -461,8 +522,10 @@ const App = (function() {
             return;
         }
 
+        const captchaToken = getTurnstileToken('register-turnstile');
+
         try {
-            await Auth.register(data);
+            await Auth.register(data, captchaToken);
             if (errorEl) errorEl.textContent = '';
             showApp();
             Utils.showToast('success', I18n.t('auth.welcome_new'));
@@ -474,6 +537,69 @@ const App = (function() {
                     errorEl.textContent = I18n.t('app.error_generic');
                 }
             }
+        }
+    }
+
+    // Handle forgot password
+    async function handleForgotPassword(e) {
+        e.preventDefault();
+        const email = document.getElementById('forgot-email').value;
+        const errorEl = document.getElementById('forgot-error');
+        const successEl = document.getElementById('forgot-success');
+
+        if (!email) {
+            if (errorEl) errorEl.textContent = I18n.t('app.error_required');
+            return;
+        }
+
+        const captchaToken = getTurnstileToken('forgot-turnstile');
+
+        try {
+            if (errorEl) errorEl.textContent = '';
+            await Auth.requestPasswordReset(email, captchaToken);
+            if (successEl) {
+                successEl.textContent = 'Enlace de recuperación enviado. Revisa tu correo electrónico para restablecer la contraseña.';
+                successEl.style.display = 'block';
+                successEl.classList.remove('hidden');
+            }
+        } catch (err) {
+            if (errorEl) {
+                errorEl.textContent = 'Error al enviar el enlace. Verifica que el correo esté registrado en Supabase.';
+            }
+        }
+    }
+
+    // Handle update password
+    async function handleUpdatePassword(e) {
+        e.preventDefault();
+        const p1 = document.getElementById('reset-new-password').value;
+        const p2 = document.getElementById('reset-confirm-password').value;
+        const errorEl = document.getElementById('update-password-error');
+
+        if (!p1 || !p2) {
+            if (errorEl) errorEl.textContent = I18n.t('app.error_required');
+            return;
+        }
+        if (!Utils.isValidPassword(p1)) {
+            if (errorEl) errorEl.textContent = I18n.t('auth.password_requirements');
+            return;
+        }
+        if (p1 !== p2) {
+            if (errorEl) errorEl.textContent = I18n.t('auth.password_mismatch');
+            return;
+        }
+
+        try {
+            await Auth.updatePassword(p1);
+            Utils.closeModal('update-password-modal');
+            Utils.showToast('success', 'Contraseña actualizada correctamente.');
+            if (Auth.isLoggedIn()) {
+                showApp();
+            } else {
+                showAuth('login');
+            }
+        } catch (err) {
+            if (errorEl) errorEl.textContent = 'Error al actualizar la contraseña: ' + (err.message || 'Inténtalo de nuevo.');
         }
     }
 

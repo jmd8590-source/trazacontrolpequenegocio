@@ -401,17 +401,10 @@
     height: 18px;
 }
 
-.form-input.password-mask {
-    -webkit-text-security: disc !important;
-    text-security: disc !important;
-    font-family: inherit;
-    letter-spacing: 0.12em;
-}
-
-.form-input.password-mask.revealed {
-    -webkit-text-security: none !important;
-    text-security: none !important;
-    letter-spacing: normal;
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .form-textarea {

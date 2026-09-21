@@ -18,20 +18,52 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- Helper function: Check if current user is admin without recursion (SECURITY DEFINER bypasses RLS)
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid() AND role = 'admin'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
+
+-- Trigger function: Prevent users from self-elevating their role
+CREATE OR REPLACE FUNCTION public.protect_profile_role()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.role IS DISTINCT FROM OLD.role THEN
+        IF NOT public.is_admin() THEN
+            RAISE EXCEPTION 'No autorizado: no tienes permisos para cambiar el rol de usuario.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Enable RLS on profiles
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own profile or admins view all" ON public.profiles;
 CREATE POLICY "Users can view own profile or admins view all" 
 ON public.profiles FOR SELECT 
-USING (auth.uid() = id OR (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
+USING (auth.uid() = id OR public.is_admin());
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile" 
 ON public.profiles FOR UPDATE 
 USING (auth.uid() = id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile" 
 ON public.profiles FOR INSERT 
 WITH CHECK (auth.uid() = id);
+
+DROP TRIGGER IF EXISTS on_profile_role_update ON public.profiles;
+CREATE TRIGGER on_profile_role_update
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.protect_profile_role();
 
 -- 2. Products / Recipes Table
 CREATE TABLE IF NOT EXISTS public.products (
@@ -323,6 +355,7 @@ CREATE TRIGGER on_profiles_updated
     FOR EACH ROW EXECUTE FUNCTION public.handle_updated_at();
 
 -- Trigger to automatically create a profile row when a new user signs up in Supabase Auth
+-- SECURE: 'role' is strictly fixed to 'user' and never read from raw_user_meta_data
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -340,7 +373,7 @@ BEGIN
         COALESCE(NEW.raw_user_meta_data->>'businessName', 'Mi Negocio'),
         COALESCE(NEW.raw_user_meta_data->>'businessType', 'artisan'),
         COALESCE(NEW.raw_user_meta_data->>'ownerName', 'Administrador'),
-        COALESCE(NEW.raw_user_meta_data->>'role', 'user')
+        'user' -- Hardcoded default role: prevents self-elevation to admin via metadata
     )
     ON CONFLICT (id) DO NOTHING;
     RETURN NEW;

@@ -59,8 +59,8 @@ const RecipesModule = (function() {
                                     <h4 style="font-size: var(--text-lg); margin-bottom: 4px;">${Utils.sanitize(r.name)}</h4>
                                     <p class="text-sm text-secondary mb-2">${Utils.sanitize(r.category || 'Elaboración artesanal')}</p>
                                     <p class="text-xs text-secondary mb-2">
-                                        <strong>${I18n.t('recipes.servings')}:</strong> ${r.servings || r.yield || '-'} | 
-                                        <strong>${I18n.t('recipes.prep_time')}:</strong> ${r.prepTime || '-'}
+                                        <strong>${I18n.t('recipes.servings')}:</strong> ${Utils.sanitize(r.servings || r.yield || '-')} | 
+                                        <strong>${I18n.t('recipes.prep_time')}:</strong> ${Utils.sanitize(r.prepTime || '-')}
                                     </p>
                                     ${allergens.length > 0 ? `
                                         <div class="recipe-allergen-auto text-xs mb-2">

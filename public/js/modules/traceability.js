@@ -395,7 +395,7 @@ const TraceabilityModule = (function() {
                     <p>TrazaControl — ${Utils.formatDate(Utils.nowISO(), I18n.getLang())}</p>
                 </div>
                 <div style="text-align: right;">
-                    <strong>${Auth.getUser().businessName || ''}</strong><br>
+                    <strong>${Utils.sanitize(Auth.getUser().businessName || '')}</strong><br>
                     <small>${I18n.t('traceability.batch_number')}: ${Utils.sanitize(product.batchNumber || '')}</small>
                 </div>
             </div>

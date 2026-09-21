@@ -20,6 +20,8 @@
     <link rel="stylesheet" href="css/components.css?v=20260829_SECURE_AUTH">
     <link rel="stylesheet" href="css/layout.css?v=20260829_SECURE_AUTH">
     <link rel="stylesheet" href="css/modules.css?v=20260829_SECURE_AUTH">
+    <!-- Cloudflare Turnstile (Anti-bot Protection) -->
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
 
@@ -73,12 +75,21 @@
                     <div class="form-group">
                         <label class="form-label" data-i18n="auth.password">Contraseña</label>
                         <div class="password-wrapper">
-                            <input type="text" id="login-password" class="form-input password-mask" placeholder="••••••••" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
+                            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
                             <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('login-password', this)" title="Mostrar / Ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
                         </div>
                     </div>
+
+                    <div style="text-align: right; margin-top: -6px; margin-bottom: 12px;">
+                        <button type="button" id="show-forgot-password" class="btn btn-ghost btn-sm" style="font-size: 12px; padding: 0; color: var(--primary);">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    </div>
+
+                    <!-- Turnstile Captcha Container -->
+                    <div id="login-turnstile" class="cf-turnstile-container mb-3" style="display: flex; justify-content: center;"></div>
 
                     <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.login_btn">
                         Iniciar Sesión
@@ -100,11 +111,6 @@
                 <div class="auth-footer">
                     <span data-i18n="auth.no_account">¿No tienes cuenta?</span>
                     <button type="button" id="show-register" data-i18n="auth.register_link">Registrar mi negocio</button>
-                    <div style="margin-top: 10px;">
-                        <button type="button" class="btn btn-ghost btn-sm" onclick="SupabaseConfig.openConfigModal()" style="font-size: 12px; color: var(--text-tertiary);">
-                            ⚙️ Configurar Backend Supabase Cloud
-                        </button>
-                    </div>
                 </div>
             </div>
 
@@ -150,7 +156,7 @@
                         <div class="form-group">
                             <label class="form-label" data-i18n="auth.password">Contraseña</label>
                             <div class="password-wrapper">
-                                <input type="text" id="register-password" class="form-input password-mask" placeholder="Mín. 8 caracteres" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
+                                <input type="password" id="register-password" class="form-input" placeholder="Mín. 8 caracteres" required autocomplete="new-password">
                                 <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('register-password', this)" title="Mostrar / Ocultar contraseña">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
@@ -159,13 +165,16 @@
                         <div class="form-group">
                             <label class="form-label" data-i18n="auth.confirm_password">Confirmar Contraseña</label>
                             <div class="password-wrapper">
-                                <input type="text" id="register-confirm-password" class="form-input password-mask" placeholder="Repite contraseña" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
+                                <input type="password" id="register-confirm-password" class="form-input" placeholder="Repite contraseña" required autocomplete="new-password">
                                 <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('register-confirm-password', this)" title="Mostrar / Ocultar contraseña">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Turnstile Captcha Container for Registration -->
+                    <div id="register-turnstile" class="cf-turnstile-container mb-3" style="display: flex; justify-content: center;"></div>
 
                     <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.register_btn">
                         Crear Cuenta y Comenzar
@@ -175,6 +184,33 @@
                 <div class="auth-footer">
                     <span data-i18n="auth.have_account">¿Ya tienes cuenta?</span>
                     <button type="button" id="show-login" data-i18n="auth.login_link">Iniciar Sesión</button>
+                </div>
+            </div>
+
+            <!-- Forgot Password Card -->
+            <div id="forgot-form-container" class="auth-card hidden">
+                <h2>Recuperar Contraseña</h2>
+                <p class="auth-subtitle">Introduce tu correo para recibir las instrucciones de recuperación</p>
+
+                <div id="forgot-error" class="form-error mb-4" style="text-align: center;"></div>
+                <div id="forgot-success" class="alert alert-success mb-4 hidden" style="padding: 12px; font-size: 13px; border-radius: 8px; text-align: center;"></div>
+
+                <form id="forgot-form">
+                    <div class="form-group">
+                        <label class="form-label" data-i18n="auth.email">Correo Electrónico</label>
+                        <input type="email" id="forgot-email" class="form-input" placeholder="tu@email.com" required autocomplete="username">
+                    </div>
+
+                    <!-- Turnstile Captcha Container for Forgot Password -->
+                    <div id="forgot-turnstile" class="cf-turnstile-container mb-3" style="display: flex; justify-content: center;"></div>
+
+                    <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;">
+                        Enviar Enlace de Recuperación
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <button type="button" id="show-login-from-forgot">← Volver a Iniciar Sesión</button>
                 </div>
             </div>
         </div>
@@ -317,11 +353,47 @@
         </div>
     </div>
 
+    <!-- Password Reset / Update Modal (Triggered on password recovery) -->
+    <div id="update-password-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Establecer Nueva Contraseña</h3>
+            </div>
+            <div class="modal-body">
+                <p class="text-secondary mb-4" style="font-size: 13px;">Introduce tu nueva contraseña segura para acceder a TrazaControl.</p>
+                <div id="update-password-error" class="form-error mb-3" style="text-align: center;"></div>
+                <form id="update-password-form">
+                    <div class="form-group">
+                        <label class="form-label">Nueva Contraseña</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reset-new-password" class="form-input" placeholder="Mínimo 8 caracteres" required autocomplete="new-password">
+                            <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('reset-new-password', this)" title="Mostrar / Ocultar contraseña">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirmar Contraseña</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="reset-confirm-password" class="form-input" placeholder="Repite la contraseña" required autocomplete="new-password">
+                            <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('reset-confirm-password', this)" title="Mostrar / Ocultar contraseña">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="padding: 12px 0 0 0; margin-top: 16px;">
+                        <button type="submit" class="btn btn-primary btn-block ripple-container">Guardar Contraseña</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- ============================================================
          SCRIPTS: Core Libraries & Modules (Loaded in dependency order)
          ============================================================ -->
-    <!-- 0. Supabase Backend SDK & Configuration -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 0. Supabase Backend SDK (Local Vendor Bundle) & Configuration -->
+    <script src="js/vendor/supabase.min.js"></script>
     <script src="js/supabase-config.js?v=20260828_SUPABASE"></script>
 
     <!-- 1. Database & Persistence Layer -->
@@ -333,10 +405,7 @@
     <!-- 3. Internationalization Engine (ES/PT/EN) -->
     <script src="js/i18n.js?v=20260829_SECURE_AUTH"></script>
 
-    <!-- 4. Security & Anti-Inspection Shield -->
-    <script src="js/security.js?v=20260829_SECURE_AUTH"></script>
-
-    <!-- 5. User Authentication & Session Engine -->
+    <!-- 4. User Authentication & Session Engine -->
     <script src="js/auth.js?v=20260829_SECURE_AUTH"></script>
 
     <!-- 6. Demo Dataset Generator -->

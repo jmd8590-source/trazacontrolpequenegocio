@@ -8,8 +8,13 @@ class NoCacheHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Expires', '0')
         super().end_headers()
 
+import os
+import functools
+
 if __name__ == '__main__':
     PORT = 8000
-    with socketserver.TCPServer(("", PORT), NoCacheHTTPRequestHandler) as httpd:
-        print(f"Serving at http://localhost:{PORT} with zero cache")
+    web_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'public')
+    handler = functools.partial(NoCacheHTTPRequestHandler, directory=web_dir)
+    with socketserver.TCPServer(("", PORT), handler) as httpd:
+        print(f"Serving '{web_dir}' at http://localhost:{PORT} with zero cache")
         httpd.serve_forever()

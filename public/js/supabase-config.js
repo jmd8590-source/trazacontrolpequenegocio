@@ -10,10 +10,13 @@ const SupabaseConfig = (function() {
     // Storage keys for dynamic config
     const STORAGE_URL_KEY = 'trazacontrol_supabase_url';
     const STORAGE_KEY_KEY = 'trazacontrol_supabase_anon_key';
+    const STORAGE_TURNSTILE_KEY = 'trazacontrol_turnstile_sitekey';
 
     // Official Project Credentials (trazacontrol)
     const DEFAULT_URL = 'https://hfjjmxnghwzpffwijoft.supabase.co';
     const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmampteG5naHd6cGZmd2lqb2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjMwNTAsImV4cCI6MjEwMzM5OTA1MH0.sofCcY2Nu2dMx3aIDGG3QMTEIHMY3wH7bhL0lC2dRSM';
+    // Cloudflare Turnstile testing sitekey (always passes)
+    const DEFAULT_TURNSTILE_KEY = '1x00000000000000000000AA';
 
     let clientInstance = null;
     let isConnected = false;
@@ -24,6 +27,10 @@ const SupabaseConfig = (function() {
 
     function getAnonKey() {
         return localStorage.getItem(STORAGE_KEY_KEY) || DEFAULT_KEY;
+    }
+
+    function getTurnstileSiteKey() {
+        return localStorage.getItem(STORAGE_TURNSTILE_KEY) || DEFAULT_TURNSTILE_KEY;
     }
 
     function setCredentials(url, key) {
@@ -131,6 +138,7 @@ const SupabaseConfig = (function() {
         getClient,
         getUrl,
         getAnonKey,
+        getTurnstileSiteKey,
         setCredentials,
         isConfigured,
         testConnection,

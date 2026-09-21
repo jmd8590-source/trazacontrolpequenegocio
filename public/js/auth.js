@@ -33,6 +33,10 @@ const Auth = (function() {
                         }
                     } else if (event === 'PASSWORD_RECOVERY') {
                         Utils.showToast('info', 'Por favor, introduce tu nueva contraseña.');
+                        const resetModal = document.getElementById('update-password-modal');
+                        if (resetModal) {
+                            Utils.openModal('update-password-modal');
+                        }
                     }
                 });
             }
@@ -41,8 +45,8 @@ const Auth = (function() {
         }
     }
 
-    // Register a new user
-    async function register(data) {
+    // Register a new user (with optional captchaToken)
+    async function register(data, captchaToken = null) {
         const { email, password, businessName, businessType, ownerName } = data;
         const normalizedEmail = email.toLowerCase().trim();
 
@@ -52,18 +56,22 @@ const Auth = (function() {
         // 1. Attempt Supabase Auth Sign Up if online & configured
         if (supabase) {
             try {
+                const signUpOptions = {
+                    data: {
+                        businessName: businessName,
+                        businessType: businessType,
+                        ownerName: ownerName,
+                        lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es'
+                    }
+                };
+                if (captchaToken) {
+                    signUpOptions.captchaToken = captchaToken;
+                }
+
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: normalizedEmail,
                     password: password,
-                    options: {
-                        data: {
-                            businessName: businessName,
-                            businessType: businessType,
-                            ownerName: ownerName,
-                            role: 'user',
-                            lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es'
-                        }
-                    }
+                    options: signUpOptions
                 });
 
                 if (authError) {
@@ -75,7 +83,7 @@ const Auth = (function() {
                 } else if (authData && authData.user) {
                     supabaseUser = authData.user;
 
-                    // Upsert profile in Supabase profiles table
+                    // Upsert profile in Supabase profiles table (role is strictly fixed on server by trigger)
                     try {
                         await supabase.from('profiles').upsert({
                             id: supabaseUser.id,
@@ -83,7 +91,6 @@ const Auth = (function() {
                             business_name: businessName,
                             business_type: businessType,
                             owner_name: ownerName,
-                            role: 'user',
                             lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es',
                             updated_at: new Date().toISOString()
                         });
@@ -133,14 +140,14 @@ const Auth = (function() {
         return localRecord;
     }
 
-    // Login
-    async function login(email, password) {
+    // Login (with optional captchaToken)
+    async function login(email, password, captchaToken = null) {
         const normalizedEmail = email.toLowerCase().trim();
         const isMasterAdmin = normalizedEmail === 'jemendo90@gmail.com' || normalizedEmail.includes('admin@trazacontrol');
 
-        // Rate limiting
-        if (typeof Security !== 'undefined' && Security.rateLimiter && !Security.rateLimiter.check(normalizedEmail)) {
-            const remaining = Security.rateLimiter.getRemainingTime(normalizedEmail);
+        // Rate limiting via Utils
+        if (typeof Utils !== 'undefined' && Utils.rateLimiter && !Utils.rateLimiter.check(normalizedEmail)) {
+            const remaining = Utils.rateLimiter.getRemainingTime(normalizedEmail);
             throw new Error(`rate_limited:${remaining}`);
         }
 
@@ -151,9 +158,14 @@ const Auth = (function() {
         // 1. Attempt Supabase Auth Login if configured with valid keys
         if (supabase && supabaseConfigured) {
             try {
+                const signInOptions = {};
+                if (captchaToken) {
+                    signInOptions.captchaToken = captchaToken;
+                }
                 const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                     email: normalizedEmail,
-                    password: password
+                    password: password,
+                    options: signInOptions
                 });
 
                 if (!authError && authData && authData.user) {
@@ -260,8 +272,8 @@ const Auth = (function() {
         }
 
         // Reset rate limiter on success
-        if (typeof Security !== 'undefined' && Security.rateLimiter) {
-            Security.rateLimiter.reset(normalizedEmail);
+        if (typeof Utils !== 'undefined' && Utils.rateLimiter) {
+            Utils.rateLimiter.reset(normalizedEmail);
         }
 
         // Start session
@@ -508,6 +520,46 @@ const Auth = (function() {
         return true;
     }
 
+    // Request password reset email via Supabase Auth
+    async function requestPasswordReset(email, captchaToken = null) {
+        const normalizedEmail = email.toLowerCase().trim();
+        const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
+        if (!supabase) {
+            throw new Error('backend_not_configured');
+        }
+
+        const options = {
+            redirectTo: window.location.origin + window.location.pathname
+        };
+        if (captchaToken) {
+            options.captchaToken = captchaToken;
+        }
+
+        const { data, error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, options);
+        if (error) throw error;
+        return true;
+    }
+
+    // Update password from reset modal
+    async function updatePassword(newPassword) {
+        const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
+        if (supabase) {
+            const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+            if (error) throw error;
+        }
+
+        if (currentUser) {
+            const localUser = await TrazaDB.read('users', currentUser.id);
+            if (localUser) {
+                const newSalt = Utils.generateSalt();
+                localUser.salt = newSalt;
+                localUser.password = await Utils.hashPassword(newPassword, newSalt);
+                await TrazaDB.update('users', localUser);
+            }
+        }
+        return true;
+    }
+
     // Inactivity monitoring
     function setupInactivityMonitor() {
         const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
@@ -542,6 +594,8 @@ const Auth = (function() {
         init,
         register,
         login,
+        requestPasswordReset,
+        updatePassword,
         startDemo,
         logout,
         getUser,
