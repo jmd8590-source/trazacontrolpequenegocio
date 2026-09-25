@@ -138,7 +138,7 @@ const App = (function() {
         I18n.translatePage();
     }
 
-    // Render Cloudflare Turnstile widgets
+    // Render Cloudflare Turnstile widgets (invisible mode — no visible badge)
     function renderTurnstiles() {
         if (typeof window.turnstile === 'undefined' || !window.turnstile.render) {
             // If turnstile script still loading, retry once ready
@@ -147,7 +147,7 @@ const App = (function() {
             }, 800);
             return;
         }
-        const sitekey = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getTurnstileSiteKey() : '1x00000000000000000000AA';
+        const sitekey = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getTurnstileSiteKey() : '1x00000000000000000000BB';
 
         ['login-turnstile', 'register-turnstile', 'forgot-turnstile'].forEach(id => {
             const container = document.getElementById(id);
@@ -155,7 +155,8 @@ const App = (function() {
                 try {
                     window.turnstile.render('#' + id, {
                         sitekey: sitekey,
-                        theme: currentTheme === 'dark' ? 'dark' : 'light'
+                        theme: currentTheme === 'dark' ? 'dark' : 'light',
+                        size: 'invisible'
                     });
                     container.dataset.turnstileRendered = 'true';
                 } catch (e) {
@@ -298,6 +299,18 @@ const App = (function() {
                 </button>
             `;
         });
+
+        // Add Logout / Exit button at the bottom of sidebar
+        html += `
+            <div class="sidebar-section-header" style="margin-top: 12px;">
+                <span class="sidebar-section-accent" style="background: var(--danger); box-shadow: 0 0 8px var(--danger);"></span>
+                <span class="sidebar-section-label" style="color: var(--danger); background: var(--danger-light); border-color: var(--danger);">Sesión</span>
+            </div>
+            <button type="button" class="sidebar-logout-btn" id="logout-btn" title="${I18n.t('auth.logout') || 'Cerrar sesión'}">
+                <span class="nav-item-icon">${ICONS.logout}</span>
+                <span class="sidebar-logout-text" data-i18n="auth.logout">${I18n.t('auth.logout') || 'Cerrar Sesión'}</span>
+            </button>
+        `;
 
         nav.innerHTML = html;
     }
@@ -481,12 +494,14 @@ const App = (function() {
         } catch (error) {
             if (errorEl) {
                 if (error.message === 'invalid_credentials') {
-                    errorEl.textContent = I18n.t('auth.invalid_credentials');
+                    errorEl.textContent = I18n.t('auth.invalid_credentials') || 'Correo o contraseña incorrectos';
+                } else if (error.message === 'backend_not_configured') {
+                    errorEl.textContent = 'El servidor de autenticación no está configurado. Contacta al administrador.';
                 } else if (error.message.startsWith('rate_limited')) {
                     const seconds = error.message.split(':')[1];
                     errorEl.textContent = `Demasiados intentos. Espera ${seconds}s`;
                 } else {
-                    errorEl.textContent = I18n.t('app.error_generic');
+                    errorEl.textContent = I18n.t('auth.invalid_credentials') || 'Correo o contraseña incorrectos';
                 }
             }
         }

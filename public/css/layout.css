@@ -610,6 +610,58 @@ html, body {
     transform: scale(1.06) !important;
 }
 
+/* Hide Cloudflare Turnstile containers (invisible mode - no visible widget needed) */
+.cf-turnstile-container {
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Sidebar Logout Button */
+.sidebar-logout-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    color: var(--danger);
+    font-size: var(--text-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--ease-out);
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    white-space: nowrap;
+    margin-top: var(--space-2);
+}
+
+.sidebar-logout-btn:hover {
+    background: var(--danger-light);
+    color: var(--danger);
+}
+
+.sidebar-logout-btn svg {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+}
+
+.sidebar.collapsed .sidebar-logout-text {
+    opacity: 0;
+    width: 0;
+    overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-logout-btn {
+    justify-content: center;
+    padding: var(--space-3);
+}
+
 /* ============================================================
    Login/Auth Screen (Compact & Accessible)
    ============================================================ */

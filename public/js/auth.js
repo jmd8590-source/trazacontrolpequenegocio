@@ -143,7 +143,6 @@ const Auth = (function() {
     // Login (with optional captchaToken)
     async function login(email, password, captchaToken = null) {
         const normalizedEmail = email.toLowerCase().trim();
-        const isMasterAdmin = normalizedEmail === 'jemendo90@gmail.com' || normalizedEmail.includes('admin@trazacontrol');
 
         // Rate limiting via Utils
         if (typeof Utils !== 'undefined' && Utils.rateLimiter && !Utils.rateLimiter.check(normalizedEmail)) {
@@ -155,120 +154,67 @@ const Auth = (function() {
         const supabaseConfigured = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.isConfigured() : false;
         let loggedUser = null;
 
-        // 1. Attempt Supabase Auth Login if configured with valid keys
+        // 1. MANDATORY Supabase Auth Login — password is ALWAYS verified server-side
         if (supabase && supabaseConfigured) {
-            try {
-                const signInOptions = {};
-                if (captchaToken) {
-                    signInOptions.captchaToken = captchaToken;
-                }
-                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                    email: normalizedEmail,
-                    password: password,
-                    options: signInOptions
-                });
-
-                if (!authError && authData && authData.user) {
-                    const sbUser = authData.user;
-                    let profileData = null;
-
-                    // Fetch profile info from profiles table
-                    try {
-                        const { data: profile } = await supabase
-                            .from('profiles')
-                            .select('*')
-                            .eq('id', sbUser.id)
-                            .single();
-                        profileData = profile;
-                    } catch (e) {
-                        console.warn('[Auth] Profile fetch warning:', e);
-                    }
-
-                    const meta = sbUser.user_metadata || {};
-                    const isAdminUser = isMasterAdmin || 
-                                    (profileData && profileData.role === 'admin') || 
-                                    (meta.role === 'admin');
-
-                    loggedUser = {
-                        id: sbUser.id,
-                        email: sbUser.email,
-                        businessName: (profileData && profileData.business_name) || meta.businessName || 'Empresa TrazaControl',
-                        businessType: (profileData && profileData.business_type) || meta.businessType || 'artisan',
-                        ownerName: (profileData && profileData.owner_name) || meta.ownerName || (isAdminUser ? 'Jesús (Administrador)' : 'Usuario'),
-                        role: isAdminUser ? 'admin' : 'user',
-                        isDemo: false,
-                        supabaseSynced: true
-                    };
-
-                    // Sync into local DB for offline caching
-                    const existingLocal = await TrazaDB.read('users', sbUser.id);
-                    if (existingLocal) {
-                        await TrazaDB.update('users', { ...existingLocal, ...loggedUser });
-                    } else {
-                        await TrazaDB.create('users', {
-                            ...loggedUser,
-                            salt: '',
-                            password: '',
-                            createdAt: Utils.nowISO()
-                        });
-                    }
-                }
-            } catch (err) {
-                console.warn('[Auth] Supabase login error, checking local fallback:', err.message);
+            const signInOptions = {};
+            if (captchaToken) {
+                signInOptions.captchaToken = captchaToken;
             }
-        }
+            const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                email: normalizedEmail,
+                password: password,
+                options: signInOptions
+            });
 
-        // 2. Master Admin Auto-Provisioning & Local Validation Fallback
-        if (!loggedUser) {
-            const users = await TrazaDB.getAll('users');
-            let localUser = users.find(u => u.email === normalizedEmail);
-
-            // If it is the Master Admin (jemendo90@gmail.com) and not in local DB yet, provision automatically
-            if (!localUser && isMasterAdmin) {
-                const salt = Utils.generateSalt();
-                const hashedPassword = await Utils.hashPassword(password, salt);
-                localUser = await TrazaDB.create('users', {
-                    email: normalizedEmail,
-                    password: hashedPassword,
-                    salt: salt,
-                    businessName: 'TrazaControl',
-                    businessType: 'artisan',
-                    ownerName: 'Jesús (Administrador)',
-                    role: 'admin',
-                    isDemo: false,
-                    createdAt: Utils.nowISO()
-                });
-            }
-
-            if (!localUser) {
+            if (authError || !authData || !authData.user) {
+                // Supabase rejected the credentials — fail immediately
                 throw new Error('invalid_credentials');
             }
 
-            // Verify password locally
-            if (localUser.salt && localUser.password) {
-                const hashedPassword = await Utils.hashPassword(password, localUser.salt);
-                if (hashedPassword !== localUser.password) {
-                    if (isMasterAdmin) {
-                        // Allow admin password update
-                        const newSalt = Utils.generateSalt();
-                        localUser.salt = newSalt;
-                        localUser.password = await Utils.hashPassword(password, newSalt);
-                        await TrazaDB.update('users', localUser);
-                    } else {
-                        throw new Error('invalid_credentials');
-                    }
-                }
+            const sbUser = authData.user;
+            let profileData = null;
+
+            // Fetch profile info from profiles table
+            try {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', sbUser.id)
+                    .single();
+                profileData = profile;
+            } catch (e) {
+                console.warn('[Auth] Profile fetch warning:', e);
             }
 
+            // Role is determined ONLY from the Supabase profiles table (server-side)
+            const isAdminUser = (profileData && profileData.role === 'admin');
+
             loggedUser = {
-                id: localUser.id,
-                email: localUser.email,
-                businessName: localUser.businessName || 'TrazaControl',
-                businessType: localUser.businessType || 'artisan',
-                ownerName: localUser.ownerName || (isMasterAdmin ? 'Jesús (Administrador)' : 'Usuario'),
-                role: isMasterAdmin ? 'admin' : (localUser.role || 'user'),
-                isDemo: localUser.isDemo || false
+                id: sbUser.id,
+                email: sbUser.email,
+                businessName: (profileData && profileData.business_name) || 'Empresa TrazaControl',
+                businessType: (profileData && profileData.business_type) || 'artisan',
+                ownerName: (profileData && profileData.owner_name) || (isAdminUser ? 'Administrador' : 'Usuario'),
+                role: isAdminUser ? 'admin' : 'user',
+                isDemo: false,
+                supabaseSynced: true
             };
+
+            // Sync into local DB for offline display (no password stored)
+            const existingLocal = await TrazaDB.read('users', sbUser.id);
+            if (existingLocal) {
+                await TrazaDB.update('users', { ...existingLocal, ...loggedUser });
+            } else {
+                await TrazaDB.create('users', {
+                    ...loggedUser,
+                    salt: '',
+                    password: '',
+                    createdAt: Utils.nowISO()
+                });
+            }
+        } else {
+            // Supabase is not configured — reject login entirely (no local-only auth)
+            throw new Error('backend_not_configured');
         }
 
         // Reset rate limiter on success
@@ -351,14 +297,29 @@ const Auth = (function() {
                     const { data: { session: sbSession } } = await supabase.auth.getSession();
                     if (sbSession && sbSession.user) {
                         const sbUser = sbSession.user;
-                        const meta = sbUser.user_metadata || {};
+                        
+                        // Fetch role from profiles table (server-side, not from user_metadata)
+                        let profileData = null;
+                        try {
+                            const { data: profile } = await supabase
+                                .from('profiles')
+                                .select('*')
+                                .eq('id', sbUser.id)
+                                .single();
+                            profileData = profile;
+                        } catch (e) {
+                            console.warn('[Auth] Profile fetch in checkSession:', e);
+                        }
+
+                        const isAdminUser = (profileData && profileData.role === 'admin');
+
                         currentUser = {
                             id: sbUser.id,
                             email: sbUser.email,
-                            businessName: meta.businessName || 'Empresa TrazaControl',
-                            businessType: meta.businessType || 'artisan',
-                            ownerName: meta.ownerName || 'Administrador',
-                            role: meta.role || 'user',
+                            businessName: (profileData && profileData.business_name) || 'Empresa TrazaControl',
+                            businessType: (profileData && profileData.business_type) || 'artisan',
+                            ownerName: (profileData && profileData.owner_name) || (isAdminUser ? 'Administrador' : 'Usuario'),
+                            role: isAdminUser ? 'admin' : 'user',
                             isDemo: false
                         };
                         startSession(currentUser);
@@ -435,9 +396,9 @@ const Auth = (function() {
         return isDemo;
     }
 
-    // Check if current user is admin
+    // Check if current user is admin (role from Supabase profiles table only)
     function isAdmin() {
-        return currentUser && (currentUser.role === 'admin' || (currentUser.email && currentUser.email.includes('admin')));
+        return currentUser && currentUser.role === 'admin';
     }
 
     // Update user profile

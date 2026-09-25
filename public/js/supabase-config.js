@@ -15,8 +15,8 @@ const SupabaseConfig = (function() {
     // Official Project Credentials (trazacontrol)
     const DEFAULT_URL = 'https://hfjjmxnghwzpffwijoft.supabase.co';
     const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmampteG5naHd6cGZmd2lqb2Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc4MjMwNTAsImV4cCI6MjEwMzM5OTA1MH0.sofCcY2Nu2dMx3aIDGG3QMTEIHMY3wH7bhL0lC2dRSM';
-    // Cloudflare Turnstile testing sitekey (always passes)
-    const DEFAULT_TURNSTILE_KEY = '1x00000000000000000000AA';
+    // Cloudflare Turnstile invisible mode testing sitekey (always passes, no visible widget)
+    const DEFAULT_TURNSTILE_KEY = '1x00000000000000000000BB';
 
     let clientInstance = null;
     let isConnected = false;
