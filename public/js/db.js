@@ -7,7 +7,7 @@ const TrazaDB = (function() {
     'use strict';
 
     const DB_NAME = 'TrazaControlDB';
-    const DB_VERSION = 1;
+    const DB_VERSION = 2;
     let db = null;
 
     const STORES = {
@@ -31,7 +31,8 @@ const TrazaDB = (function() {
         goods_entries: { keyPath: 'id', indexes: ['userId', 'supplierId', 'date'] },
         water_points: { keyPath: 'id', indexes: ['userId'] },
         water_readings: { keyPath: 'id', indexes: ['userId', 'pointId', 'date'] },
-        settings: { keyPath: 'id', indexes: ['userId'] }
+        settings: { keyPath: 'id', indexes: ['userId'] },
+        sync_queue: { keyPath: 'id', indexes: ['storeName', 'action', 'timestamp'] }
     };
 
     // Helper: Convert object keys from camelCase to snake_case for Supabase SQL
@@ -56,24 +57,40 @@ const TrazaDB = (function() {
         return n;
     }
 
-    // Supabase Cloud Sync helper
+    // Supabase Cloud Sync helper with automatic offline queueing
     async function syncToSupabase(action, storeName, record, id) {
         try {
             if (typeof Auth === 'undefined' || Auth.isDemoMode()) return;
+            if (storeName === 'sync_queue' || storeName === 'users') return;
+
+            // If offline, directly enqueue mutation
+            const isOnline = navigator.onLine && (typeof TrazaSync === 'undefined' || TrazaSync.isOnline());
+            if (!isOnline) {
+                if (typeof TrazaSync !== 'undefined') {
+                    await TrazaSync.enqueue(action, storeName, record, id);
+                }
+                return;
+            }
+
             const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
             if (!supabase) return;
 
-            // Map storeName to Supabase table if needed
             const tableName = storeName;
             const snakeRecord = toSnakeCase(record);
 
             if (action === 'insert' || action === 'update') {
-                await supabase.from(tableName).upsert(snakeRecord);
+                const { error } = await supabase.from(tableName).upsert(snakeRecord);
+                if (error) throw error;
             } else if (action === 'delete') {
-                await supabase.from(tableName).delete().eq('id', id);
+                const { error } = await supabase.from(tableName).delete().eq('id', id);
+                if (error) throw error;
             }
         } catch (err) {
-            console.warn(`[TrazaDB] Background Supabase sync (${action} ${storeName}) notice:`, err.message);
+            console.warn(`[TrazaDB] Cloud sync failed (${action} ${storeName}), saving to offline queue:`, err.message);
+            // Save to offline queue so it will sync automatically when back online
+            if (typeof TrazaSync !== 'undefined') {
+                await TrazaSync.enqueue(action, storeName, record, id);
+            }
         }
     }
 
@@ -425,6 +442,8 @@ const TrazaDB = (function() {
         exportToJSON,
         exportToCSV,
         deleteUserData,
+        toSnakeCase,
+        toCamelCase,
         STORES
     };
 })();

@@ -47,60 +47,74 @@ const Auth = (function() {
 
     // Register a new user (with optional captchaToken)
     async function register(data, captchaToken = null) {
-        const { email, password, businessName, businessType, ownerName } = data;
+        const { email, password, businessName, businessType, ownerName, cif, phone } = data;
         const normalizedEmail = email.toLowerCase().trim();
 
         const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
         let supabaseUser = null;
+        let requiresConfirmation = false;
 
-        // 1. Attempt Supabase Auth Sign Up if online & configured
+        // 1. Mandatory Supabase Auth Sign Up
         if (supabase) {
-            try {
-                const signUpOptions = {
-                    data: {
-                        businessName: businessName,
-                        businessType: businessType,
-                        ownerName: ownerName,
-                        lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es'
-                    }
-                };
-                if (captchaToken) {
-                    signUpOptions.captchaToken = captchaToken;
+            const signUpOptions = {
+                data: {
+                    business_name: businessName,
+                    business_type: businessType,
+                    owner_name: ownerName,
+                    businessName: businessName,
+                    businessType: businessType,
+                    ownerName: ownerName,
+                    cif: cif || '',
+                    phone: phone || '',
+                    address: cif ? `CIF/NIF: ${cif}` : '',
+                    lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es'
+                }
+            };
+            if (captchaToken) {
+                signUpOptions.captchaToken = captchaToken;
+            }
+
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: normalizedEmail,
+                password: password,
+                options: signUpOptions
+            });
+
+            if (authError) {
+                if (authError.message && (authError.message.includes('already') || authError.status === 422)) {
+                    throw new Error('email_exists');
+                }
+                if (authError.message && authError.message.toLowerCase().includes('password')) {
+                    throw new Error('weak_password');
+                }
+                throw new Error(authError.message || 'supabase_error');
+            }
+
+            if (authData && authData.user) {
+                supabaseUser = authData.user;
+
+                // Check if Supabase requires email verification
+                if (!authData.session && !authData.user.confirmed_at && authData.user.identities && authData.user.identities.length > 0) {
+                    requiresConfirmation = true;
                 }
 
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    email: normalizedEmail,
-                    password: password,
-                    options: signUpOptions
-                });
-
-                if (authError) {
-                    // If error is user already registered
-                    if (authError.message && (authError.message.includes('already') || authError.status === 422)) {
-                        throw new Error('email_exists');
-                    }
-                    console.warn('[Auth] Supabase sign up notice:', authError.message);
-                } else if (authData && authData.user) {
-                    supabaseUser = authData.user;
-
-                    // Upsert profile in Supabase profiles table (role is strictly fixed on server by trigger)
-                    try {
-                        await supabase.from('profiles').upsert({
-                            id: supabaseUser.id,
-                            email: normalizedEmail,
-                            business_name: businessName,
-                            business_type: businessType,
-                            owner_name: ownerName,
-                            lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es',
-                            updated_at: new Date().toISOString()
-                        });
-                    } catch (profErr) {
-                        console.warn('[Auth] Profile upsert warning:', profErr);
-                    }
+                // Upsert profile in Supabase profiles table
+                try {
+                    await supabase.from('profiles').upsert({
+                        id: supabaseUser.id,
+                        email: normalizedEmail,
+                        business_name: businessName,
+                        business_type: businessType,
+                        owner_name: ownerName,
+                        phone: phone || '',
+                        address: cif ? `CIF/NIF: ${cif}` : '',
+                        role: 'user',
+                        lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es',
+                        updated_at: new Date().toISOString()
+                    });
+                } catch (profErr) {
+                    console.warn('[Auth] Profile upsert notice:', profErr);
                 }
-            } catch (err) {
-                if (err.message === 'email_exists') throw err;
-                console.warn('[Auth] Supabase sign up error fallback to local:', err.message);
             }
         }
 
@@ -123,6 +137,8 @@ const Auth = (function() {
             businessName: businessName,
             businessType: businessType,
             ownerName: ownerName,
+            cif: cif || '',
+            phone: phone || '',
             role: 'user',
             lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es',
             createdAt: Utils.nowISO(),
@@ -135,7 +151,15 @@ const Auth = (function() {
             await TrazaDB.create('users', localRecord);
         }
 
-        // 4. Start Session
+        // If email confirmation is required, notify caller without auto-logging in
+        if (requiresConfirmation) {
+            return {
+                ...localRecord,
+                requiresConfirmation: true
+            };
+        }
+
+        // 4. Start Session if auto-confirmed
         startSession(localRecord);
         return localRecord;
     }
@@ -272,16 +296,23 @@ const Auth = (function() {
 
         isDemo = Boolean(user.isDemo);
 
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+        // Save in both sessionStorage and localStorage for offline cold room resilience
+        const sessionPayload = JSON.stringify({
             userId: user.id,
             email: user.email,
             businessName: user.businessName,
             businessType: user.businessType,
             ownerName: user.ownerName,
+            cif: user.cif || '',
+            phone: user.phone || '',
             role: user.role || 'user',
             loginTime: Date.now(),
             isDemo: isDemo
-        }));
+        });
+        sessionStorage.setItem(SESSION_KEY, sessionPayload);
+        if (!isDemo) {
+            localStorage.setItem('trazacontrol_offline_session', sessionPayload);
+        }
 
         resetInactivityTimer();
     }
@@ -289,7 +320,12 @@ const Auth = (function() {
     // Check for existing session
     async function checkSession() {
         try {
-            const session = sessionStorage.getItem(SESSION_KEY);
+            let session = sessionStorage.getItem(SESSION_KEY);
+            if (!session) {
+                // If in cold store or reloaded offline, check offline session cache
+                session = localStorage.getItem('trazacontrol_offline_session');
+            }
+
             if (!session) {
                 // Check if Supabase has active session
                 const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
@@ -319,6 +355,8 @@ const Auth = (function() {
                             businessName: (profileData && profileData.business_name) || 'Empresa TrazaControl',
                             businessType: (profileData && profileData.business_type) || 'artisan',
                             ownerName: (profileData && profileData.owner_name) || (isAdminUser ? 'Administrador' : 'Usuario'),
+                            cif: (profileData && profileData.address) || '',
+                            phone: (profileData && profileData.phone) || '',
                             role: isAdminUser ? 'admin' : 'user',
                             isDemo: false
                         };
@@ -337,6 +375,8 @@ const Auth = (function() {
                 businessName: sessionData.businessName,
                 businessType: sessionData.businessType,
                 ownerName: sessionData.ownerName,
+                cif: sessionData.cif || '',
+                phone: sessionData.phone || '',
                 role: sessionData.role || 'user',
                 isDemo: isDemo
             };
@@ -373,6 +413,7 @@ const Auth = (function() {
         currentUser = null;
         isDemo = false;
         sessionStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem('trazacontrol_offline_session');
         clearInactivityTimer();
     }
 

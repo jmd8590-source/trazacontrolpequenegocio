@@ -100,6 +100,20 @@ const App = (function() {
             // Setup event listeners
             setupEventListeners();
 
+            // Initialize Offline Synchronization Engine (Cold stores / Secaderos)
+            if (typeof TrazaSync !== 'undefined') {
+                await TrazaSync.init();
+            }
+
+            // Register Service Worker for 100% offline cold room usage
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('[App] Offline ServiceWorker active with scope:', reg.scope);
+                }).catch(err => {
+                    console.warn('[App] ServiceWorker registration notice:', err.message);
+                });
+            }
+
             // Check auth and show appropriate screen
             if (Auth.isLoggedIn()) {
                 showApp();
@@ -385,10 +399,15 @@ const App = (function() {
         }
 
         // Show auth view toggles
-        Utils.delegate(document.body, '#show-register', 'click', () => showAuth('register'));
+        Utils.delegate(document.body, '#show-register, #show-register-direct', 'click', () => showAuth('register'));
         Utils.delegate(document.body, '#show-login', 'click', () => showAuth('login'));
         Utils.delegate(document.body, '#show-forgot-password', 'click', () => showAuth('forgot'));
         Utils.delegate(document.body, '#show-login-from-forgot', 'click', () => showAuth('login'));
+
+        // Offline manual sync button and badge click
+        Utils.delegate(document.body, '#manual-sync-btn, #connection-status-badge', 'click', () => {
+            if (typeof TrazaSync !== 'undefined') TrazaSync.syncNow();
+        });
 
         // Demo button
         Utils.delegate(document.body, '#demo-btn', 'click', handleDemo);
@@ -511,46 +530,71 @@ const App = (function() {
     async function handleRegister(e) {
         e.preventDefault();
 
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        const errorEl = document.getElementById('register-error');
+
         const data = {
             email: document.getElementById('register-email').value,
             password: document.getElementById('register-password').value,
             businessName: document.getElementById('register-business').value,
             businessType: document.getElementById('register-type').value,
-            ownerName: document.getElementById('register-name').value
+            ownerName: document.getElementById('register-name').value,
+            cif: (document.getElementById('register-cif') && document.getElementById('register-cif').value) || '',
+            phone: (document.getElementById('register-phone') && document.getElementById('register-phone').value) || ''
         };
 
         const confirmPassword = document.getElementById('register-confirm-password').value;
-        const errorEl = document.getElementById('register-error');
 
         if (!data.email || !data.password || !data.businessName || !data.ownerName) {
-            if (errorEl) errorEl.textContent = I18n.t('app.error_required');
+            if (errorEl) errorEl.textContent = I18n.t('app.error_required') || 'Por favor completa todos los campos obligatorios.';
             return;
         }
 
         if (!Utils.isValidPassword(data.password)) {
-            if (errorEl) errorEl.textContent = I18n.t('auth.password_requirements');
+            if (errorEl) errorEl.textContent = I18n.t('auth.password_requirements') || 'La contraseña debe tener al menos 8 caracteres con mayúscula, minúscula y número.';
             return;
         }
 
         if (data.password !== confirmPassword) {
-            if (errorEl) errorEl.textContent = I18n.t('auth.password_mismatch');
+            if (errorEl) errorEl.textContent = I18n.t('auth.password_mismatch') || 'Las contraseñas no coinciden.';
             return;
         }
 
         const captchaToken = getTurnstileToken('register-turnstile');
 
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '⏳ Guardando datos en Supabase...';
+        }
+
         try {
-            await Auth.register(data, captchaToken);
+            const result = await Auth.register(data, captchaToken);
             if (errorEl) errorEl.textContent = '';
-            showApp();
-            Utils.showToast('success', I18n.t('auth.welcome_new'));
+
+            if (result && result.requiresConfirmation) {
+                // Supabase requires email verification
+                showAuth('login');
+                Utils.showToast('info', '¡Registro creado en Supabase! Por favor revisa tu correo electrónico para confirmar la cuenta y luego inicia sesión.');
+            } else {
+                // Auto-logged in
+                showApp();
+                Utils.showToast('success', '🎉 ¡Bienvenido! Tu cuenta y negocio han sido guardados en Supabase.');
+            }
         } catch (error) {
             if (errorEl) {
                 if (error.message === 'email_exists') {
-                    errorEl.textContent = I18n.t('auth.email_exists');
+                    errorEl.textContent = I18n.t('auth.email_exists') || 'Este correo ya está registrado en Supabase. Inicia sesión o recupera tu contraseña.';
+                } else if (error.message === 'weak_password') {
+                    errorEl.textContent = 'La contraseña debe contener al menos 8 caracteres.';
                 } else {
-                    errorEl.textContent = I18n.t('app.error_generic');
+                    errorEl.textContent = error.message || I18n.t('app.error_generic');
                 }
+            }
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         }
     }
