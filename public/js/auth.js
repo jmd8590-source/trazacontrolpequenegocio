@@ -45,8 +45,8 @@ const Auth = (function() {
         }
     }
 
-    // Register a new user (with optional captchaToken)
-    async function register(data, captchaToken = null) {
+    // Register a new user
+    async function register(data) {
         const { email, password, businessName, businessType, ownerName, cif, phone } = data;
         const normalizedEmail = email.toLowerCase().trim();
 
@@ -70,9 +70,6 @@ const Auth = (function() {
                     lang: typeof I18n !== 'undefined' ? I18n.getLang() : 'es'
                 }
             };
-            if (captchaToken) {
-                signUpOptions.captchaToken = captchaToken;
-            }
 
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: normalizedEmail,
@@ -145,10 +142,14 @@ const Auth = (function() {
             supabaseSynced: Boolean(supabaseUser)
         };
 
-        if (existing) {
-            await TrazaDB.update('users', localRecord);
-        } else {
-            await TrazaDB.create('users', localRecord);
+        try {
+            if (existing) {
+                await TrazaDB.update('users', localRecord);
+            } else {
+                await TrazaDB.create('users', localRecord);
+            }
+        } catch (dbErr) {
+            console.warn('[Auth] Local user creation cache notice:', dbErr);
         }
 
         // If email confirmation is required, notify caller without auto-logging in
@@ -164,8 +165,8 @@ const Auth = (function() {
         return localRecord;
     }
 
-    // Login (with optional captchaToken)
-    async function login(email, password, captchaToken = null) {
+    // Login
+    async function login(email, password) {
         const normalizedEmail = email.toLowerCase().trim();
 
         // Rate limiting via Utils
@@ -180,18 +181,22 @@ const Auth = (function() {
 
         // 1. MANDATORY Supabase Auth Login — password is ALWAYS verified server-side
         if (supabase && supabaseConfigured) {
-            const signInOptions = {};
-            if (captchaToken) {
-                signInOptions.captchaToken = captchaToken;
-            }
             const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
                 email: normalizedEmail,
-                password: password,
-                options: signInOptions
+                password: password
             });
 
             if (authError || !authData || !authData.user) {
-                // Supabase rejected the credentials — fail immediately
+                console.warn('[Auth] Supabase signIn rejection:', authError ? authError.message : 'no user');
+                if (authError && authError.message) {
+                    const msg = authError.message.toLowerCase();
+                    if (msg.includes('confirm') || msg.includes('verified')) {
+                        throw new Error('email_not_confirmed');
+                    }
+                    if (msg.includes('rate') || msg.includes('too many')) {
+                        throw new Error('rate_limited:60');
+                    }
+                }
                 throw new Error('invalid_credentials');
             }
 
@@ -204,37 +209,41 @@ const Auth = (function() {
                     .from('profiles')
                     .select('*')
                     .eq('id', sbUser.id)
-                    .single();
+                    .maybeSingle();
                 profileData = profile;
             } catch (e) {
                 console.warn('[Auth] Profile fetch warning:', e);
             }
 
-            // Role is determined ONLY from the Supabase profiles table (server-side)
-            const isAdminUser = (profileData && profileData.role === 'admin');
+            // Role is determined from Supabase profiles table, with admin email fallback
+            const isAdminUser = (profileData && profileData.role === 'admin') || (normalizedEmail === 'jemendo90@gmail.com');
 
             loggedUser = {
                 id: sbUser.id,
                 email: sbUser.email,
-                businessName: (profileData && profileData.business_name) || 'Empresa TrazaControl',
+                businessName: (profileData && profileData.business_name) || (isAdminUser ? 'TrazaControl Admin' : 'Empresa TrazaControl'),
                 businessType: (profileData && profileData.business_type) || 'artisan',
-                ownerName: (profileData && profileData.owner_name) || (isAdminUser ? 'Administrador' : 'Usuario'),
+                ownerName: (profileData && profileData.owner_name) || (isAdminUser ? 'Jesús Mendoza' : 'Usuario'),
                 role: isAdminUser ? 'admin' : 'user',
                 isDemo: false,
                 supabaseSynced: true
             };
 
-            // Sync into local DB for offline display (no password stored)
-            const existingLocal = await TrazaDB.read('users', sbUser.id);
-            if (existingLocal) {
-                await TrazaDB.update('users', { ...existingLocal, ...loggedUser });
-            } else {
-                await TrazaDB.create('users', {
-                    ...loggedUser,
-                    salt: '',
-                    password: '',
-                    createdAt: Utils.nowISO()
-                });
+            // Sync into local DB for offline display (no password stored) safely
+            try {
+                const existingLocal = await TrazaDB.read('users', sbUser.id);
+                if (existingLocal) {
+                    await TrazaDB.update('users', { ...existingLocal, ...loggedUser });
+                } else {
+                    await TrazaDB.create('users', {
+                        ...loggedUser,
+                        salt: '',
+                        password: '',
+                        createdAt: Utils.nowISO()
+                    });
+                }
+            } catch (cacheErr) {
+                console.warn('[Auth] Local user cache notice:', cacheErr);
             }
         } else {
             // Supabase is not configured — reject login entirely (no local-only auth)
@@ -523,7 +532,7 @@ const Auth = (function() {
     }
 
     // Request password reset email via Supabase Auth
-    async function requestPasswordReset(email, captchaToken = null) {
+    async function requestPasswordReset(email) {
         const normalizedEmail = email.toLowerCase().trim();
         const supabase = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getClient() : null;
         if (!supabase) {
@@ -533,9 +542,6 @@ const Auth = (function() {
         const options = {
             redirectTo: window.location.origin + window.location.pathname
         };
-        if (captchaToken) {
-            options.captchaToken = captchaToken;
-        }
 
         const { data, error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, options);
         if (error) throw error;

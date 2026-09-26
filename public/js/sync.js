@@ -260,13 +260,15 @@ const TrazaSync = (function() {
 
         if (!badge) return;
 
+        const t = typeof I18n !== 'undefined' ? I18n.t.bind(I18n) : (k) => k;
+
         if (isSyncing) {
             badge.className = 'connection-status-badge syncing';
-            if (text) text.textContent = 'Sincronizando...';
+            if (text) text.textContent = t('app.syncing') || 'Sincronizando...';
             if (manualBtn) manualBtn.classList.remove('hidden');
         } else if (online) {
             badge.className = 'connection-status-badge online';
-            if (text) text.textContent = pendingCount > 0 ? `${pendingCount} pendientes` : 'En línea';
+            if (text) text.textContent = pendingCount > 0 ? t('offline.pending_badge', { count: pendingCount }) : (t('app.online') || 'En línea');
             if (manualBtn) {
                 if (pendingCount > 0) {
                     manualBtn.classList.remove('hidden');
@@ -278,13 +280,13 @@ const TrazaSync = (function() {
         } else {
             // OFFLINE
             badge.className = 'connection-status-badge offline';
-            if (text) text.textContent = pendingCount > 0 ? `Sin red (${pendingCount})` : 'Sin cobertura';
+            if (text) text.textContent = pendingCount > 0 ? `${t('app.offline') || 'Sin cobertura'} (${pendingCount})` : (t('app.offline') || 'Sin cobertura');
             if (manualBtn) manualBtn.classList.add('hidden');
             if (banner) banner.classList.remove('hidden');
         }
 
         if (pendingBadge) {
-            pendingBadge.textContent = `${pendingCount} pendientes`;
+            pendingBadge.textContent = t('offline.pending_badge', { count: pendingCount });
         }
     }
 

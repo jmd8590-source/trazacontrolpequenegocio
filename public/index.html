@@ -21,8 +21,6 @@
     <link rel="stylesheet" href="css/components.css?v=20260925_SECURE_AUTH_V2">
     <link rel="stylesheet" href="css/layout.css?v=20260925_SECURE_AUTH_V2">
     <link rel="stylesheet" href="css/modules.css?v=20260925_SECURE_AUTH_V2">
-    <!-- Cloudflare Turnstile (Anti-bot Protection) -->
-    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body>
 
@@ -84,24 +82,24 @@
                     </div>
 
                     <div style="text-align: right; margin-top: -6px; margin-bottom: 8px;">
-                        <button type="button" id="show-forgot-password" class="btn btn-ghost btn-sm" style="font-size: 12px; padding: 0; color: var(--primary);">
+                        <button type="button" id="show-forgot-password" class="btn btn-ghost btn-sm" style="font-size: 12px; padding: 0; color: var(--primary);" data-i18n="auth.forgot_password">
                             ¿Olvidaste tu contraseña?
                         </button>
                     </div>
 
                     <!-- Apartado Regístrate (Solicitado por el usuario, ubicado justo bajo '¿Olvidaste tu contraseña?') -->
                     <div class="auth-register-box" style="margin-top: 6px; margin-bottom: 14px; padding: 10px 14px; background: rgba(37, 99, 235, 0.05); border: 1.5px dashed rgba(37, 99, 235, 0.35); border-radius: 10px; text-align: center;">
-                        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">¿Aún no tienes cuenta para tu negocio?</div>
+                        <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;" data-i18n="auth.no_account_question">¿Aún no tienes cuenta para tu negocio?</div>
                         <button type="button" id="show-register-direct" class="btn btn-sm ripple-container" style="background: var(--primary); color: #fff; font-weight: 600; font-size: 13px; padding: 8px 12px; border: none; border-radius: 6px; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0 auto; width: 100%;">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7.5" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
-                            Regístrate aquí
+                            <span data-i18n="auth.register_direct_btn">Regístrate aquí</span>
                         </button>
                     </div>
 
-                    <!-- Turnstile Captcha Container -->
-                    <div id="login-turnstile" class="cf-turnstile-container mb-3" style="display: flex; justify-content: center;"></div>
+                    <!-- Error feedback right above submit button -->
+                    <div id="login-error-bottom" class="form-error mb-3" style="text-align: center; justify-content: center; display: none;"></div>
 
-                    <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.login_btn">
+                    <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.login_btn">
                         Iniciar Sesión
                     </button>
                 </form>
@@ -117,11 +115,6 @@
                     </svg>
                     <span data-i18n="auth.try_demo">Probar Modo Demo</span>
                 </button>
-
-                <div class="auth-footer">
-                    <span data-i18n="auth.no_account">¿No tienes cuenta?</span>
-                    <button type="button" id="show-register" data-i18n="auth.register_link">Registrar mi negocio</button>
-                </div>
             </div>
 
             <!-- Register Form Card -->
@@ -147,7 +140,7 @@
                             <select id="register-type" class="form-select" required>
                                 <option value="bakery" data-i18n="auth.business_types.bakery">Panadería / Pastelería</option>
                                 <option value="butchery" data-i18n="auth.business_types.butchery">Carnicería / Charcutería / Matadero</option>
-                                <option value="curing">Secadero / Jamones / Embutidos</option>
+                                <option value="curing" data-i18n="auth.business_types.curing">Secadero / Jamones / Embutidos</option>
                                 <option value="dairy" data-i18n="auth.business_types.dairy">Quesería / Lácteos</option>
                                 <option value="canning" data-i18n="auth.business_types.canning">Conservas Artesanales</option>
                                 <option value="honey" data-i18n="auth.business_types.honey">Miel / Apicultura</option>
@@ -160,11 +153,11 @@
 
                     <div class="grid-2">
                         <div class="form-group">
-                            <label class="form-label">NIF / CIF o Registro Sanitario</label>
+                            <label class="form-label" data-i18n="auth.cif_label">NIF / CIF o Registro Sanitario</label>
                             <input type="text" id="register-cif" class="form-input" placeholder="Ej: B12345678 / ES-10.000/B">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Teléfono de Contacto</label>
+                            <label class="form-label" data-i18n="auth.phone_label">Teléfono de Contacto</label>
                             <input type="tel" id="register-phone" class="form-input" placeholder="Ej: 600123456">
                         </div>
                     </div>
@@ -195,9 +188,6 @@
                         </div>
                     </div>
 
-                    <!-- Turnstile Captcha Container for Registration -->
-                    <div id="register-turnstile" class="cf-turnstile-container mb-3" style="display: flex; justify-content: center;"></div>
-
                     <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.register_btn">
                         Guardar Datos en Supabase y Comenzar
                     </button>
@@ -211,8 +201,8 @@
 
             <!-- Forgot Password Card -->
             <div id="forgot-form-container" class="auth-card hidden">
-                <h2>Recuperar Contraseña</h2>
-                <p class="auth-subtitle">Introduce tu correo para recibir las instrucciones de recuperación</p>
+                <h2 data-i18n="auth.forgot_title">Recuperar Contraseña</h2>
+                <p class="auth-subtitle" data-i18n="auth.forgot_subtitle">Introduce tu correo para recibir las instrucciones de recuperación</p>
 
                 <div id="forgot-error" class="form-error mb-4" style="text-align: center;"></div>
                 <div id="forgot-success" class="alert alert-success mb-4 hidden" style="padding: 12px; font-size: 13px; border-radius: 8px; text-align: center;"></div>
@@ -223,16 +213,13 @@
                         <input type="email" id="forgot-email" class="form-input" placeholder="tu@email.com" required autocomplete="username">
                     </div>
 
-                    <!-- Turnstile Captcha Container for Forgot Password -->
-                    <div id="forgot-turnstile" class="cf-turnstile-container mb-3" style="display: flex; justify-content: center;"></div>
-
-                    <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;">
+                    <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.send_recovery_btn">
                         Enviar Enlace de Recuperación
                     </button>
                 </form>
 
                 <div class="auth-footer">
-                    <button type="button" id="show-login-from-forgot">← Volver a Iniciar Sesión</button>
+                    <button type="button" id="show-login-from-forgot" data-i18n="auth.back_to_login">← Volver a Iniciar Sesión</button>
                 </div>
             </div>
         </div>
@@ -302,7 +289,7 @@
                     <!-- Connection & Offline Sync Status Pill -->
                     <div id="connection-status-badge" class="connection-status-badge online" title="Estado de conexión con Supabase. Haz clic para sincronizar">
                         <span class="status-indicator-dot"></span>
-                        <span class="status-text" id="connection-status-text">En línea</span>
+                        <span class="status-text" id="connection-status-text" data-i18n="app.online">En línea</span>
                         <button type="button" id="manual-sync-btn" class="manual-sync-btn hidden" title="Sincronizar ahora con la nube" aria-label="Sincronizar">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                                 <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
@@ -348,8 +335,8 @@
                 <div class="offline-bar-content">
                     <span class="offline-badge-icon">📡</span>
                     <div class="offline-message">
-                        <strong>Modo Sin Cobertura Activo (Cámaras / Secadero)</strong>
-                        <span>Puedes seguir registrando temperaturas, lotes y tareas normalmente. Se guardan en este dispositivo y se sincronizarán al recuperar cobertura.</span>
+                        <strong data-i18n="offline.banner_title">Modo Sin Cobertura Activo (Cámaras / Secadero)</strong>
+                        <span data-i18n="offline.banner_desc">Puedes seguir registrando temperaturas, lotes y tareas normalmente. Se guardan en este dispositivo y se sincronizarán al recuperar cobertura.</span>
                     </div>
                     <span id="offline-pending-badge" class="offline-pending-count">0 pendientes</span>
                 </div>

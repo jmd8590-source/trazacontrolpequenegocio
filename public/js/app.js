@@ -146,49 +146,8 @@ const App = (function() {
             if (loginCard) loginCard.classList.remove('hidden');
         }
 
-        renderTurnstiles();
-
         // Live translate auth screen elements
         I18n.translatePage();
-    }
-
-    // Render Cloudflare Turnstile widgets (invisible mode — no visible badge)
-    function renderTurnstiles() {
-        if (typeof window.turnstile === 'undefined' || !window.turnstile.render) {
-            // If turnstile script still loading, retry once ready
-            setTimeout(() => {
-                if (typeof window.turnstile !== 'undefined' && window.turnstile.render) renderTurnstiles();
-            }, 800);
-            return;
-        }
-        const sitekey = typeof SupabaseConfig !== 'undefined' ? SupabaseConfig.getTurnstileSiteKey() : '1x00000000000000000000BB';
-
-        ['login-turnstile', 'register-turnstile', 'forgot-turnstile'].forEach(id => {
-            const container = document.getElementById(id);
-            if (container && !container.dataset.turnstileRendered) {
-                try {
-                    window.turnstile.render('#' + id, {
-                        sitekey: sitekey,
-                        theme: currentTheme === 'dark' ? 'dark' : 'light',
-                        size: 'invisible'
-                    });
-                    container.dataset.turnstileRendered = 'true';
-                } catch (e) {
-                    console.warn('[Turnstile] render notice:', e);
-                }
-            }
-        });
-    }
-
-    function getTurnstileToken(containerId) {
-        if (typeof window.turnstile !== 'undefined' && window.turnstile.getResponse) {
-            try {
-                return window.turnstile.getResponse('#' + containerId) || null;
-            } catch (e) {
-                return null;
-            }
-        }
-        return null;
     }
 
     // Show main app
@@ -494,34 +453,82 @@ const App = (function() {
     async function handleLogin(e) {
         e.preventDefault();
 
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
+        const submitBtn = e.target.querySelector('button[type="submit"]') || document.getElementById('login-submit-btn');
+        const originalText = submitBtn ? submitBtn.innerHTML : (I18n.t('auth.login_btn') || 'Iniciar Sesión');
+        const emailInput = document.getElementById('login-email');
+        const passwordInput = document.getElementById('login-password');
+        const email = emailInput ? emailInput.value.trim() : '';
+        const password = passwordInput ? passwordInput.value : '';
         const errorEl = document.getElementById('login-error');
+        const errorBottomEl = document.getElementById('login-error-bottom');
+
+        const showError = (errorKey, fallbackMsg, params = null) => {
+            const msg = (typeof I18n !== 'undefined' ? I18n.t(errorKey, params) : null) || fallbackMsg;
+            if (errorEl) {
+                errorEl.setAttribute('data-error-key', errorKey);
+                if (params) errorEl.setAttribute('data-error-params', JSON.stringify(params));
+                else errorEl.removeAttribute('data-error-params');
+                errorEl.textContent = msg;
+                errorEl.style.display = 'flex';
+            }
+            if (errorBottomEl) {
+                errorBottomEl.setAttribute('data-error-key', errorKey);
+                if (params) errorBottomEl.setAttribute('data-error-params', JSON.stringify(params));
+                else errorBottomEl.removeAttribute('data-error-params');
+                errorBottomEl.textContent = msg;
+                errorBottomEl.style.display = 'flex';
+            }
+            Utils.showToast('error', msg);
+        };
+
+        const clearError = () => {
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.removeAttribute('data-error-key');
+                errorEl.removeAttribute('data-error-params');
+                errorEl.style.display = 'none';
+            }
+            if (errorBottomEl) {
+                errorBottomEl.textContent = '';
+                errorBottomEl.removeAttribute('data-error-key');
+                errorBottomEl.removeAttribute('data-error-params');
+                errorBottomEl.style.display = 'none';
+            }
+        };
+
+        clearError();
 
         if (!email || !password) {
-            if (errorEl) errorEl.textContent = I18n.t('app.error_required');
+            showError('app.error_required', 'Introduce tu correo y contraseña.');
             return;
         }
 
-        const captchaToken = getTurnstileToken('login-turnstile');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<span style="display:inline-block;width:16px;height:16px;border:2px solid #fff;border-top-color:transparent;border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px;"></span> ${I18n.t('auth.checking_credentials') || 'Comprobando credenciales...'}`;
+        }
 
         try {
-            await Auth.login(email, password, captchaToken);
-            if (errorEl) errorEl.textContent = '';
+            await Auth.login(email, password);
+            clearError();
             showApp();
-            Utils.showToast('success', I18n.t('auth.welcome_back'));
+            Utils.showToast('success', I18n.t('auth.welcome_back') || '¡Bienvenido de nuevo!');
         } catch (error) {
-            if (errorEl) {
-                if (error.message === 'invalid_credentials') {
-                    errorEl.textContent = I18n.t('auth.invalid_credentials') || 'Correo o contraseña incorrectos';
-                } else if (error.message === 'backend_not_configured') {
-                    errorEl.textContent = 'El servidor de autenticación no está configurado. Contacta al administrador.';
-                } else if (error.message.startsWith('rate_limited')) {
-                    const seconds = error.message.split(':')[1];
-                    errorEl.textContent = `Demasiados intentos. Espera ${seconds}s`;
-                } else {
-                    errorEl.textContent = I18n.t('auth.invalid_credentials') || 'Correo o contraseña incorrectos';
-                }
+            console.error('[Login] Rejection details:', error);
+            if (error.message === 'email_not_confirmed') {
+                showError('auth.email_not_confirmed', 'Tu correo aún no ha sido confirmado en Supabase.');
+            } else if (error.message === 'backend_not_configured') {
+                showError('auth.backend_not_configured', 'El servidor de Supabase no está configurado.');
+            } else if (error.message.startsWith('rate_limited')) {
+                const seconds = error.message.split(':')[1] || '60';
+                showError('auth.rate_limited', `Demasiados intentos fallidos. Espera ${seconds}s.`, { seconds });
+            } else {
+                showError('auth.invalid_credentials', 'Email o contraseña incorrectos.');
+            }
+        } finally {
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
             }
         }
     }
@@ -531,7 +538,7 @@ const App = (function() {
         e.preventDefault();
 
         const submitBtn = e.target.querySelector('button[type="submit"]');
-        const originalText = submitBtn ? submitBtn.innerHTML : '';
+        const originalText = submitBtn ? submitBtn.innerHTML : (I18n.t('auth.register_btn') || 'Crear Cuenta');
         const errorEl = document.getElementById('register-error');
 
         const data = {
@@ -547,47 +554,60 @@ const App = (function() {
         const confirmPassword = document.getElementById('register-confirm-password').value;
 
         if (!data.email || !data.password || !data.businessName || !data.ownerName) {
-            if (errorEl) errorEl.textContent = I18n.t('app.error_required') || 'Por favor completa todos los campos obligatorios.';
+            if (errorEl) {
+                errorEl.setAttribute('data-error-key', 'app.error_required');
+                errorEl.textContent = I18n.t('app.error_required') || 'Por favor completa todos los campos obligatorios.';
+            }
             return;
         }
 
         if (!Utils.isValidPassword(data.password)) {
-            if (errorEl) errorEl.textContent = I18n.t('auth.password_requirements') || 'La contraseña debe tener al menos 8 caracteres con mayúscula, minúscula y número.';
+            if (errorEl) {
+                errorEl.setAttribute('data-error-key', 'auth.password_requirements');
+                errorEl.textContent = I18n.t('auth.password_requirements') || 'La contraseña debe tener al menos 8 caracteres con mayúscula, minúscula y número.';
+            }
             return;
         }
 
         if (data.password !== confirmPassword) {
-            if (errorEl) errorEl.textContent = I18n.t('auth.password_mismatch') || 'Las contraseñas no coinciden.';
+            if (errorEl) {
+                errorEl.setAttribute('data-error-key', 'auth.password_mismatch');
+                errorEl.textContent = I18n.t('auth.password_mismatch') || 'Las contraseñas no coinciden.';
+            }
             return;
         }
 
-        const captchaToken = getTurnstileToken('register-turnstile');
-
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '⏳ Guardando datos en Supabase...';
+            submitBtn.innerHTML = `⏳ ${I18n.t('auth.saving_data') || 'Guardando datos en Supabase...'}`;
         }
 
         try {
-            const result = await Auth.register(data, captchaToken);
-            if (errorEl) errorEl.textContent = '';
+            const result = await Auth.register(data);
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.removeAttribute('data-error-key');
+            }
 
             if (result && result.requiresConfirmation) {
                 // Supabase requires email verification
                 showAuth('login');
-                Utils.showToast('info', '¡Registro creado en Supabase! Por favor revisa tu correo electrónico para confirmar la cuenta y luego inicia sesión.');
+                Utils.showToast('info', I18n.t('auth.email_not_confirmed') || '¡Registro creado en Supabase! Revisa tu correo.');
             } else {
                 // Auto-logged in
                 showApp();
-                Utils.showToast('success', '🎉 ¡Bienvenido! Tu cuenta y negocio han sido guardados en Supabase.');
+                Utils.showToast('success', I18n.t('auth.welcome_new') || '¡Bienvenido a TrazaControl!');
             }
         } catch (error) {
             if (errorEl) {
                 if (error.message === 'email_exists') {
-                    errorEl.textContent = I18n.t('auth.email_exists') || 'Este correo ya está registrado en Supabase. Inicia sesión o recupera tu contraseña.';
+                    errorEl.setAttribute('data-error-key', 'auth.email_exists');
+                    errorEl.textContent = I18n.t('auth.email_exists') || 'Este correo ya está registrado.';
                 } else if (error.message === 'weak_password') {
-                    errorEl.textContent = 'La contraseña debe contener al menos 8 caracteres.';
+                    errorEl.setAttribute('data-error-key', 'auth.password_requirements');
+                    errorEl.textContent = I18n.t('auth.password_requirements');
                 } else {
+                    errorEl.removeAttribute('data-error-key');
                     errorEl.textContent = error.message || I18n.t('app.error_generic');
                 }
             }
@@ -607,23 +627,29 @@ const App = (function() {
         const successEl = document.getElementById('forgot-success');
 
         if (!email) {
-            if (errorEl) errorEl.textContent = I18n.t('app.error_required');
+            if (errorEl) {
+                errorEl.setAttribute('data-error-key', 'app.error_required');
+                errorEl.textContent = I18n.t('app.error_required');
+            }
             return;
         }
 
-        const captchaToken = getTurnstileToken('forgot-turnstile');
-
         try {
-            if (errorEl) errorEl.textContent = '';
-            await Auth.requestPasswordReset(email, captchaToken);
+            if (errorEl) {
+                errorEl.textContent = '';
+                errorEl.removeAttribute('data-error-key');
+            }
+            await Auth.requestPasswordReset(email);
             if (successEl) {
-                successEl.textContent = 'Enlace de recuperación enviado. Revisa tu correo electrónico para restablecer la contraseña.';
+                successEl.setAttribute('data-i18n', 'auth.recovery_sent');
+                successEl.textContent = I18n.t('auth.recovery_sent') || 'Enlace de recuperación enviado.';
                 successEl.style.display = 'block';
                 successEl.classList.remove('hidden');
             }
         } catch (err) {
             if (errorEl) {
-                errorEl.textContent = 'Error al enviar el enlace. Verifica que el correo esté registrado en Supabase.';
+                errorEl.setAttribute('data-error-key', 'auth.recovery_error');
+                errorEl.textContent = I18n.t('auth.recovery_error') || 'Error al enviar el enlace.';
             }
         }
     }

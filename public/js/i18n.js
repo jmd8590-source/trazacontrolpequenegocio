@@ -122,11 +122,40 @@ const I18n = (function() {
     function translatePage() {
         // Text content
         document.querySelectorAll('[data-i18n]').forEach(el => {
-            if (el.children.length > 0) return; // Protect parent containers with child icons/spans
             const key = el.getAttribute('data-i18n');
             const translation = t(key);
-            if (translation && translation !== key) {
+            if (!translation || translation === key) return;
+
+            if (el.children.length === 0) {
                 el.textContent = translation;
+            } else {
+                // If container has child elements (e.g. icon + text), update text node safely
+                let foundTextNode = false;
+                for (let i = 0; i < el.childNodes.length; i++) {
+                    const node = el.childNodes[i];
+                    if (node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0) {
+                        node.textContent = ' ' + translation.trim();
+                        foundTextNode = true;
+                        break;
+                    }
+                }
+                if (!foundTextNode) {
+                    const span = el.querySelector('span:not([data-i18n])');
+                    if (span) span.textContent = translation;
+                }
+            }
+        });
+
+        // Re-translate active form errors with data-error-key
+        document.querySelectorAll('[data-error-key]').forEach(el => {
+            const key = el.getAttribute('data-error-key');
+            if (key) {
+                const paramsAttr = el.getAttribute('data-error-params');
+                let params = null;
+                if (paramsAttr) {
+                    try { params = JSON.parse(paramsAttr); } catch (e) {}
+                }
+                el.textContent = t(key, params);
             }
         });
 

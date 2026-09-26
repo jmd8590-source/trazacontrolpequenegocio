@@ -4,7 +4,7 @@
    slaughterhouses, and production plants without network coverage.
    ============================================================ */
 
-const CACHE_NAME = 'trazacontrol-cache-v20260925';
+const CACHE_NAME = 'trazacontrol-cache-v20260926-fixes';
 
 const STATIC_ASSETS = [
     './',
@@ -77,7 +77,7 @@ self.addEventListener('fetch', (event) => {
     const url = new URL(request.url);
 
     // Never intercept Supabase cloud API requests, let them fail naturally so TrazaDB can queue them offline
-    if (url.hostname.includes('supabase.co') || url.hostname.includes('challenges.cloudflare.com')) {
+    if (url.hostname.includes('supabase.co')) {
         return;
     }
 
