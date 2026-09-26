@@ -115,6 +115,12 @@
                     </svg>
                     <span data-i18n="auth.try_demo">Probar Modo Demo</span>
                 </button>
+
+                <!-- Privacy Policy & Terms of Service Footer -->
+                <div class="auth-legal-footer" style="margin-top: 18px; text-align: center; font-size: 12px; color: var(--text-tertiary); line-height: 1.5;">
+                    <a href="javascript:void(0)" onclick="Utils.openModal('legal-modal')" style="color: var(--primary); text-decoration: underline; cursor: pointer; font-weight: 500;" data-i18n="auth.privacy_terms_link">Política de Privacidad y Términos de Servicio</a>
+                    <div style="font-size: 11px; opacity: 0.85; margin-top: 4px; color: var(--text-secondary);" data-i18n="auth.privacy_gdpr_note">Tus datos están protegidos conforme al RGPD de la UE</div>
+                </div>
             </div>
 
             <!-- Register Form Card -->
@@ -417,6 +423,39 @@
                         <button type="submit" class="btn btn-primary btn-block ripple-container">Guardar Contraseña</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================
+         PRIVACY POLICY & TERMS OF SERVICE MODAL (RGPD / GDPR)
+         ============================================================ -->
+    <div id="legal-modal" class="modal-overlay hidden" onclick="if (event.target === this) Utils.closeModal('legal-modal')">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 data-i18n="auth.legal_title">Política de Privacidad y Términos de Servicio</h3>
+                <button type="button" class="modal-close" onclick="Utils.closeModal('legal-modal')" aria-label="Cerrar">&times;</button>
+            </div>
+            <div class="modal-body" style="font-size: 13.5px; line-height: 1.6; max-height: 65vh; overflow-y: auto;">
+                <div class="mb-4">
+                    <h4 style="color: var(--text-primary); font-size: 15px; margin-bottom: 6px; font-weight: 600;" data-i18n="auth.legal_rgpd_title">1. Protección de Datos y RGPD</h4>
+                    <p class="text-secondary" data-i18n="auth.legal_rgpd_text">En TrazaControl garantizamos la máxima seguridad y confidencialidad de la información de tu negocio. Todos los datos registrados (temperaturas, lotes, limpieza, proveedores y recetas) pertenecen exclusivamente a tu empresa y se almacenan de forma cifrada con aislamiento estricto (Row Level Security). Ningún tercero tiene acceso a tus datos.</p>
+                </div>
+                <div class="mb-4">
+                    <h4 style="color: var(--text-primary); font-size: 15px; margin-bottom: 6px; font-weight: 600;" data-i18n="auth.legal_purpose_title">2. Finalidad del Tratamiento</h4>
+                    <p class="text-secondary" data-i18n="auth.legal_purpose_text">El tratamiento de los datos se realiza exclusivamente para facilitar el autocontrol sanitario (APPCC) y el cumplimiento de las normativas vigentes (Reglamento CE 178/2002 y Reglamento CE 852/2004) exigidas por las autoridades sanitarias.</p>
+                </div>
+                <div class="mb-4">
+                    <h4 style="color: var(--text-primary); font-size: 15px; margin-bottom: 6px; font-weight: 600;" data-i18n="auth.legal_offline_title">3. Datos Locales y Funcionamiento Offline</h4>
+                    <p class="text-secondary" data-i18n="auth.legal_offline_text">La aplicación permite el registro sin cobertura en cámaras o secaderos mediante almacenamiento seguro local (IndexedDB) en tu dispositivo. Los datos se sincronizan con la nube tan pronto como se restablece la conexión.</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--text-primary); font-size: 15px; margin-bottom: 6px; font-weight: 600;" data-i18n="auth.legal_rights_title">4. Tus Derechos</h4>
+                    <p class="text-secondary" data-i18n="auth.legal_rights_text">Conforme a la normativa europea de protección de datos, puedes solicitar en cualquier momento la exportación, rectificación o eliminación total de tu cuenta y todos sus registros asociados sin penalización alguna.</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-primary" onclick="Utils.closeModal('legal-modal')" data-i18n="auth.close_legal">Entendido y Cerrar</button>
             </div>
         </div>
     </div>

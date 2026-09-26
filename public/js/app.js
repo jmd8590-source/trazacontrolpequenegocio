@@ -362,6 +362,12 @@ const App = (function() {
         Utils.delegate(document.body, '#show-login', 'click', () => showAuth('login'));
         Utils.delegate(document.body, '#show-forgot-password', 'click', () => showAuth('forgot'));
         Utils.delegate(document.body, '#show-login-from-forgot', 'click', () => showAuth('login'));
+        Utils.delegate(document.body, '#open-privacy-policy, .open-privacy-policy-link', 'click', () => {
+            if (typeof I18n !== 'undefined' && document.getElementById('legal-modal')) {
+                I18n.translatePage(document.getElementById('legal-modal'));
+            }
+            Utils.openModal('legal-modal');
+        });
 
         // Offline manual sync button and badge click
         Utils.delegate(document.body, '#manual-sync-btn, #connection-status-badge', 'click', () => {
