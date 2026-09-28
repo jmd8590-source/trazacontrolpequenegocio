@@ -273,18 +273,6 @@ const App = (function() {
             `;
         });
 
-        // Add Logout / Exit button at the bottom of sidebar
-        html += `
-            <div class="sidebar-section-header" style="margin-top: 12px;">
-                <span class="sidebar-section-accent" style="background: var(--danger); box-shadow: 0 0 8px var(--danger);"></span>
-                <span class="sidebar-section-label" style="color: var(--danger); background: var(--danger-light); border-color: var(--danger);">Sesión</span>
-            </div>
-            <button type="button" class="sidebar-logout-btn" id="logout-btn" title="${I18n.t('auth.logout') || 'Cerrar sesión'}">
-                <span class="nav-item-icon">${ICONS.logout}</span>
-                <span class="sidebar-logout-text" data-i18n="auth.logout">${I18n.t('auth.logout') || 'Cerrar Sesión'}</span>
-            </button>
-        `;
-
         nav.innerHTML = html;
     }
 
