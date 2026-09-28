@@ -4,7 +4,7 @@
    slaughterhouses, and production plants without network coverage.
    ============================================================ */
 
-const CACHE_NAME = 'trazacontrol-cache-v20260928-safe-hdr2';
+const CACHE_NAME = 'trazacontrol-cache-v20260928-mobile-fix-final';
 
 const STATIC_ASSETS = [
     './',
@@ -90,7 +90,10 @@ self.addEventListener('fetch', (event) => {
     if (request.mode === 'navigate') {
         event.respondWith(
             fetch(request).catch(async () => {
-                const cached = await caches.match('./index.html') || await caches.match('/index.html') || await caches.match('/');
+                const cached = await caches.match('./index.html', { ignoreSearch: true }) ||
+                               await caches.match('/index.html', { ignoreSearch: true }) ||
+                               await caches.match('/', { ignoreSearch: true }) ||
+                               await caches.match('index.html', { ignoreSearch: true });
                 return cached || new Response('TrazaControl Offline', { headers: { 'Content-Type': 'text/html' } });
             })
         );
@@ -99,7 +102,7 @@ self.addEventListener('fetch', (event) => {
 
     // Local static assets (CSS, JS, Fonts, JSON)
     event.respondWith(
-        caches.match(request).then((cachedResponse) => {
+        caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
             if (cachedResponse) {
                 // Fetch in background to update cache (Stale-While-Revalidate)
                 fetch(request).then((networkResponse) => {
@@ -110,15 +113,13 @@ self.addEventListener('fetch', (event) => {
                 return cachedResponse;
             }
 
-            // If not in cache, try network
+            // If not in cache, fetch from network
             return fetch(request).then((networkResponse) => {
                 if (networkResponse && networkResponse.status === 200) {
                     const responseClone = networkResponse.clone();
                     caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
                 }
                 return networkResponse;
-            }).catch(() => {
-                console.warn('[SW] Offline fetch fallback for:', request.url);
             });
         })
     );

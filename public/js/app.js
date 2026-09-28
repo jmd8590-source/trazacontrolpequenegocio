@@ -122,6 +122,18 @@ const App = (function() {
             }
         } catch (error) {
             console.error('[App] Initialization error:', error);
+            // Fallback: Ensure screen is NEVER left blank on mobile devices
+            try {
+                if (typeof Auth !== 'undefined' && Auth.isLoggedIn()) {
+                    showApp();
+                } else {
+                    showAuth();
+                }
+            } catch (fallbackErr) {
+                console.error('[App] Fallback display error:', fallbackErr);
+                const authEl = document.getElementById('auth-screen');
+                if (authEl) authEl.classList.add('active');
+            }
         }
     }
 

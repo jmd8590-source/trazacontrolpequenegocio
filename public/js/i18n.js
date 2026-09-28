@@ -16,7 +16,7 @@ const I18n = (function() {
         if (loaded[lang]) return loaded[lang];
 
         try {
-            const response = await fetch(`lang/${lang}.json?v=${Date.now()}`);
+            const response = await fetch(`lang/${lang}.json`);
             if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
             const data = await response.json();
             loaded[lang] = data;
