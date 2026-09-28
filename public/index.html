@@ -2,11 +2,39 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <meta name="description" content="TrazaControl — Sistema Integral de Trazabilidad, APPCC y Seguridad Alimentaria para Pequeños Negocios y Artesanos Locales">
     <meta name="theme-color" content="#0071e3">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="application-name" content="TrazaControl">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="./">
+
+    <!-- Open Graph / Identity Metadata (Protects Against Phishing False Positives) -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrazaControl">
+    <meta property="og:title" content="TrazaControl — Gestión Sanitaria y Trazabilidad">
+    <meta property="og:description" content="Sistema Integral de Trazabilidad, APPCC y Seguridad Alimentaria para Pequeños Negocios y Artesanos Locales">
+    <meta property="og:locale" content="es_ES">
+
+    <!-- Favicon & Touch Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230071e3'/%3E%3Cpath d='M25 50 L42 67 L75 33' stroke='white' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%230071e3'/%3E%3Cpath d='M25 50 L42 67 L75 33' stroke='white' stroke-width='10' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+
+    <!-- Schema.org SoftwareApplication (Signals Verified Web Application to Search Engine Crawlers) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "TrazaControl",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "All modern browsers",
+      "description": "Sistema Integral de Trazabilidad, APPCC y Seguridad Alimentaria para Pequeños Negocios y Artesanos Locales.",
+      "browserRequirements": "Requires JavaScript. Requires HTML5."
+    }
+    </script>
+
     <title>TrazaControl — Gestión Sanitaria y Trazabilidad</title>
 
     <!-- Google Fonts: Inter -->
@@ -16,11 +44,11 @@
     <link rel="manifest" href="manifest.json">
 
     <!-- CSS Design System -->
-    <link rel="stylesheet" href="css/main.css?v=20260925_SECURE_AUTH_V2">
-    <link rel="stylesheet" href="css/animations.css?v=20260925_SECURE_AUTH_V2">
-    <link rel="stylesheet" href="css/components.css?v=20260925_SECURE_AUTH_V2">
-    <link rel="stylesheet" href="css/layout.css?v=20260925_SECURE_AUTH_V2">
-    <link rel="stylesheet" href="css/modules.css?v=20260925_SECURE_AUTH_V2">
+    <link rel="stylesheet" href="css/main.css?v=20260928_MOBILE_FIX">
+    <link rel="stylesheet" href="css/animations.css?v=20260928_MOBILE_FIX">
+    <link rel="stylesheet" href="css/components.css?v=20260928_MOBILE_FIX">
+    <link rel="stylesheet" href="css/layout.css?v=20260928_MOBILE_FIX">
+    <link rel="stylesheet" href="css/modules.css?v=20260928_MOBILE_FIX">
 </head>
 <body>
 
@@ -65,16 +93,16 @@
 
                 <div id="login-error" class="form-error mb-4" style="text-align: center;"></div>
 
-                <form id="login-form">
+                <form id="login-form" method="post" action="javascript:void(0);" onsubmit="return false;" autocomplete="on">
                     <div class="form-group">
                         <label class="form-label" data-i18n="auth.email">Correo Electrónico</label>
-                        <input type="email" id="login-email" class="form-input" placeholder="tu@email.com" required autocomplete="username">
+                        <input type="email" id="login-email" name="email" class="form-input" placeholder="tu@email.com" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" data-i18n="auth.password">Contraseña</label>
                         <div class="password-wrapper">
-                            <input type="password" id="login-password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                            <input type="password" id="login-password" name="password" class="form-input" placeholder="••••••••" required autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false">
                             <button type="button" class="password-toggle-btn" onclick="Utils.togglePasswordVisibility('login-password', this)" title="Mostrar / Ocultar contraseña" aria-label="Mostrar u ocultar contraseña">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             </button>
@@ -130,7 +158,7 @@
 
                 <div id="register-error" class="form-error mb-4" style="text-align: center;"></div>
 
-                <form id="register-form">
+                <form id="register-form" method="post" action="javascript:void(0);" onsubmit="return false;" autocomplete="on">
                     <div class="form-group">
                         <label class="form-label" data-i18n="auth.business_name">Nombre del Negocio / Razón Social</label>
                         <input type="text" id="register-business" class="form-input" placeholder="Ej: Panadería El Obrador / Embutidos Sierra" required>
@@ -213,10 +241,10 @@
                 <div id="forgot-error" class="form-error mb-4" style="text-align: center;"></div>
                 <div id="forgot-success" class="alert alert-success mb-4 hidden" style="padding: 12px; font-size: 13px; border-radius: 8px; text-align: center;"></div>
 
-                <form id="forgot-form">
+                <form id="forgot-form" method="post" action="javascript:void(0);" onsubmit="return false;" autocomplete="on">
                     <div class="form-group">
                         <label class="form-label" data-i18n="auth.email">Correo Electrónico</label>
-                        <input type="email" id="forgot-email" class="form-input" placeholder="tu@email.com" required autocomplete="username">
+                        <input type="email" id="forgot-email" name="email" class="form-input" placeholder="tu@email.com" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block ripple-container" style="padding: 13px; font-size: 15px;" data-i18n="auth.send_recovery_btn">

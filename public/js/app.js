@@ -127,6 +127,13 @@ const App = (function() {
 
     // Show auth screen
     function showAuth(view) {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+
         document.getElementById('auth-screen').classList.add('active');
         document.getElementById('app-container').classList.remove('active');
 
@@ -152,8 +159,21 @@ const App = (function() {
 
     // Show main app
     function showApp() {
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+
         document.getElementById('auth-screen').classList.remove('active');
         document.getElementById('app-container').classList.add('active');
+
+        // Reset scroll position on window, document, and main content
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.scrollTop = 0;
+        }
 
         // Update user info in sidebar
         updateUserInfo();
@@ -215,7 +235,10 @@ const App = (function() {
             targetPage.classList.add('active');
         }
 
-        // Scroll central content container to top
+        // Scroll central content container and window to top
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
         const mainContent = document.querySelector('.main-content');
         if (mainContent) {
             mainContent.scrollTop = 0;
