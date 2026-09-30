@@ -122,14 +122,17 @@ CREATE TABLE IF NOT EXISTS public.stock_movements (
 ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own stock movements" ON public.stock_movements FOR ALL USING (auth.uid() = user_id);
 
--- 5. Temperature Control Points Table
+-- 5. Temperature & Humidity Control Points Table
 CREATE TABLE IF NOT EXISTS public.temperature_points (
     id TEXT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    type TEXT, -- 'fridge', 'freezer', 'hot_holding', 'room'
+    type TEXT, -- 'fridge', 'freezer', 'hot_holding', 'room', 'cold_room', 'workspace', 'display_fridge'
     min_temp NUMERIC NOT NULL,
     max_temp NUMERIC NOT NULL,
+    track_humidity BOOLEAN DEFAULT FALSE,
+    min_humidity NUMERIC,
+    max_humidity NUMERIC,
     location TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -137,15 +140,22 @@ CREATE TABLE IF NOT EXISTS public.temperature_points (
 ALTER TABLE public.temperature_points ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own temp points" ON public.temperature_points FOR ALL USING (auth.uid() = user_id);
 
--- 6. Temperature Readings Table
+-- Migration safety for existing temperature_points tables
+ALTER TABLE public.temperature_points ADD COLUMN IF NOT EXISTS track_humidity BOOLEAN DEFAULT FALSE;
+ALTER TABLE public.temperature_points ADD COLUMN IF NOT EXISTS min_humidity NUMERIC;
+ALTER TABLE public.temperature_points ADD COLUMN IF NOT EXISTS max_humidity NUMERIC;
+
+-- 6. Temperature & Humidity Readings Table
 CREATE TABLE IF NOT EXISTS public.temperature_readings (
     id TEXT PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     point_id TEXT REFERENCES public.temperature_points(id) ON DELETE CASCADE,
     temperature NUMERIC NOT NULL,
+    humidity NUMERIC,
     date DATE NOT NULL,
     time TEXT NOT NULL,
     operator TEXT,
+    responsible TEXT,
     status TEXT, -- 'correct', 'warning', 'critical'
     corrective_action TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
@@ -153,6 +163,10 @@ CREATE TABLE IF NOT EXISTS public.temperature_readings (
 
 ALTER TABLE public.temperature_readings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own temp readings" ON public.temperature_readings FOR ALL USING (auth.uid() = user_id);
+
+-- Migration safety for existing temperature_readings tables
+ALTER TABLE public.temperature_readings ADD COLUMN IF NOT EXISTS humidity NUMERIC;
+ALTER TABLE public.temperature_readings ADD COLUMN IF NOT EXISTS responsible TEXT;
 
 -- 7. Pest Control Company & Points
 CREATE TABLE IF NOT EXISTS public.pest_company (

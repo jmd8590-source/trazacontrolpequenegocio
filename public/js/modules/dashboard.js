@@ -196,7 +196,9 @@ const DashboardModule = (function() {
         // Get most recent reading for each point
         const latestByPoint = {};
         readings.forEach(r => {
-            if (!latestByPoint[r.pointId] || new Date(r.date) > new Date(latestByPoint[r.pointId].date)) {
+            const rDate = new Date(r.date || r.createdAt);
+            const existingDate = latestByPoint[r.pointId] ? new Date(latestByPoint[r.pointId].date || latestByPoint[r.pointId].createdAt) : null;
+            if (!existingDate || rDate > existingDate) {
                 latestByPoint[r.pointId] = r;
             }
         });
@@ -208,7 +210,10 @@ const DashboardModule = (function() {
             const point = points.find(p => p.id === reading.pointId);
             if (point) {
                 total++;
-                if (reading.temperature >= point.minTemp && reading.temperature <= point.maxTemp) {
+                const tempInRange = reading.temperature >= point.minTemp && reading.temperature <= point.maxTemp;
+                const hasHum = point.trackHumidity && reading.humidity !== null && reading.humidity !== undefined && reading.humidity !== '';
+                const humInRange = hasHum ? (reading.humidity >= point.minHumidity && reading.humidity <= point.maxHumidity) : true;
+                if (tempInRange && humInRange) {
                     ok++;
                 }
             }
@@ -250,11 +255,11 @@ const DashboardModule = (function() {
     function generateAlerts(tempReadings, tempPoints, stockItems, incidents, cleaningLogs) {
         const alerts = [];
 
-        // Temperature alerts
+        // Temperature & Humidity alerts
         tempPoints.forEach(point => {
             const readings = tempReadings.filter(r => r.pointId === point.id);
             if (readings.length > 0) {
-                const latest = readings.sort((a, b) => new Date(b.date) - new Date(a.date))[0];
+                const latest = readings.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))[0];
                 if (latest.temperature > point.maxTemp) {
                     alerts.push({
                         type: 'danger',
@@ -267,6 +272,22 @@ const DashboardModule = (function() {
                         icon: '🌡️',
                         text: I18n.t('dashboard.alert_temp_low', { location: point.name })
                     });
+                }
+
+                if (point.trackHumidity && latest.humidity !== null && latest.humidity !== undefined && latest.humidity !== '') {
+                    if (latest.humidity > point.maxHumidity) {
+                        alerts.push({
+                            type: 'danger',
+                            icon: '💧',
+                            text: `${point.name}: Humedad alta (${latest.humidity}% > ${point.maxHumidity}%)`
+                        });
+                    } else if (latest.humidity < point.minHumidity) {
+                        alerts.push({
+                            type: 'warning',
+                            icon: '💧',
+                            text: `${point.name}: Humedad baja (${latest.humidity}% < ${point.minHumidity}%)`
+                        });
+                    }
                 }
             }
         });
@@ -309,9 +330,10 @@ const DashboardModule = (function() {
         const activities = [];
 
         tempReadings.slice(-3).forEach(r => {
+            const humText = (r.humidity !== null && r.humidity !== undefined && r.humidity !== '') ? ` | 💧 ${r.humidity}%` : '';
             activities.push({
-                text: `${I18n.t('temperature.new_reading')}: ${r.temperature}°C`,
-                date: r.createdAt || r.date,
+                text: `${I18n.t('temperature.new_reading')}: ${r.temperature}°C${humText}`,
+                date: r.date || r.createdAt,
                 icon: '🌡️',
                 iconClass: 'temp'
             });

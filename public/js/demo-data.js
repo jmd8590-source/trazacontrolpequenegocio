@@ -13,7 +13,10 @@ const DemoData = (function() {
             name: 'Cámara Frigorífica Principal (Lácteos y Masas)',
             type: 'cold_room',
             minTemp: 0.0,
-            maxTemp: 4.0
+            maxTemp: 4.0,
+            trackHumidity: true,
+            minHumidity: 65,
+            maxHumidity: 85
         });
 
         const p2 = await TrazaDB.create('temperature_points', {
@@ -21,7 +24,8 @@ const DemoData = (function() {
             name: 'Congelador de Materias Primas',
             type: 'freezer',
             minTemp: -22.0,
-            maxTemp: -18.0
+            maxTemp: -18.0,
+            trackHumidity: false
         });
 
         const p3 = await TrazaDB.create('temperature_points', {
@@ -29,44 +33,72 @@ const DemoData = (function() {
             name: 'Vitrina Expositora Pastelería',
             type: 'display_fridge',
             minTemp: 2.0,
-            maxTemp: 6.0
+            maxTemp: 6.0,
+            trackHumidity: false
         });
 
         const p4 = await TrazaDB.create('temperature_points', {
             userId,
-            name: 'Cámara de Fermentación Controlada',
+            name: 'Cámara de Fermentación / Secadero',
             type: 'workspace',
             minTemp: 14.0,
-            maxTemp: 18.0
+            maxTemp: 18.0,
+            trackHumidity: true,
+            minHumidity: 70,
+            maxHumidity: 85
         });
 
-        // 2. Temperature Readings
+        // 2. Temperature & Humidity Readings (Multiple times a day: Morning, Noon, Evening)
         const now = Date.now();
         const hour = 3600 * 1000;
         const day = 24 * hour;
 
+        // Readings for Today - Morning (08:30)
         await TrazaDB.create('temperature_readings', {
-            userId, pointId: p1.id, temperature: 3.2,
-            date: new Date(now - hour).toISOString(), responsible: 'Carlos Maestro'
+            userId, pointId: p1.id, temperature: 2.9, humidity: 74,
+            date: new Date(now - hour * 9).toISOString(), time: '08:30', responsible: 'Carlos Maestro'
         });
         await TrazaDB.create('temperature_readings', {
-            userId, pointId: p1.id, temperature: 2.8,
-            date: new Date(now - day).toISOString(), responsible: 'María Ayudante'
+            userId, pointId: p4.id, temperature: 15.5, humidity: 76,
+            date: new Date(now - hour * 9).toISOString(), time: '08:35', responsible: 'Carlos Maestro'
         });
 
+        // Readings for Today - Midday (14:15)
+        await TrazaDB.create('temperature_readings', {
+            userId, pointId: p1.id, temperature: 3.4, humidity: 78,
+            date: new Date(now - hour * 3).toISOString(), time: '14:15', responsible: 'María Ayudante'
+        });
         await TrazaDB.create('temperature_readings', {
             userId, pointId: p2.id, temperature: -19.5,
-            date: new Date(now - hour * 2).toISOString(), responsible: 'Carlos Maestro'
+            date: new Date(now - hour * 3).toISOString(), time: '14:20', responsible: 'María Ayudante'
         });
-
         await TrazaDB.create('temperature_readings', {
             userId, pointId: p3.id, temperature: 4.5,
-            date: new Date(now - hour * 3).toISOString(), responsible: 'Ana Venta'
+            date: new Date(now - hour * 3).toISOString(), time: '14:22', responsible: 'Ana Venta'
+        });
+        await TrazaDB.create('temperature_readings', {
+            userId, pointId: p4.id, temperature: 16.2, humidity: 79,
+            date: new Date(now - hour * 3).toISOString(), time: '14:25', responsible: 'Carlos Maestro'
         });
 
+        // Readings for Today - Afternoon / Evening (Recent)
         await TrazaDB.create('temperature_readings', {
-            userId, pointId: p4.id, temperature: 16.0,
-            date: new Date(now - hour * 4).toISOString(), responsible: 'Carlos Maestro'
+            userId, pointId: p1.id, temperature: 3.1, humidity: 75,
+            date: new Date(now - hour).toISOString(), time: '18:45', responsible: 'Carlos Maestro'
+        });
+        await TrazaDB.create('temperature_readings', {
+            userId, pointId: p4.id, temperature: 16.0, humidity: 77,
+            date: new Date(now - hour).toISOString(), time: '18:50', responsible: 'Carlos Maestro'
+        });
+
+        // Yesterday's readings
+        await TrazaDB.create('temperature_readings', {
+            userId, pointId: p1.id, temperature: 2.8, humidity: 72,
+            date: new Date(now - day).toISOString(), time: '09:00', responsible: 'María Ayudante'
+        });
+        await TrazaDB.create('temperature_readings', {
+            userId, pointId: p4.id, temperature: 15.8, humidity: 75,
+            date: new Date(now - day).toISOString(), time: '09:05', responsible: 'Carlos Maestro'
         });
 
         // 3. Pest Control

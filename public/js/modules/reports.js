@@ -241,22 +241,26 @@ const ReportsModule = (function() {
                 </table>
             </div>
 
-            <!-- 2. Temperature Section -->
+            <!-- 2. Temperature & Humidity Section -->
             <div class="print-sheet-section">
-                <h3>2. ${I18n.t('reports.temperature_report')} (${data.tempReadings.length})</h3>
+                <h3>2. ${I18n.t('temperature.title')} (${data.tempReadings.length})</h3>
                 <table>
                     <thead>
-                        <tr><th>${I18n.t('app.date')}</th><th>${I18n.t('temperature.control_point')}</th><th>°C</th><th>${I18n.t('app.status')}</th><th>${I18n.t('app.responsible')}</th></tr>
+                        <tr><th>${I18n.t('app.date')}</th><th>${I18n.t('temperature.control_point')}</th><th>°C</th><th>${I18n.t('temperature.humidity')}</th><th>${I18n.t('app.status')}</th><th>${I18n.t('app.responsible')}</th></tr>
                     </thead>
                     <tbody>
-                        ${data.tempReadings.slice(0, 15).map(r => {
+                        ${data.tempReadings.slice(0, 20).map(r => {
                             const pt = data.tempPoints.find(p => p.id === r.pointId);
-                            const ok = pt ? (r.temperature >= pt.minTemp && r.temperature <= pt.maxTemp) : true;
+                            const tempOk = pt ? (r.temperature >= pt.minTemp && r.temperature <= pt.maxTemp) : true;
+                            const hasHum = r.humidity !== null && r.humidity !== undefined && r.humidity !== '';
+                            const humOk = (hasHum && pt && pt.trackHumidity) ? (r.humidity >= pt.minHumidity && r.humidity <= pt.maxHumidity) : true;
+                            const ok = tempOk && humOk;
                             return `
                                 <tr>
-                                    <td>${Utils.formatDateTime(r.date, lang)}</td>
+                                    <td>${Utils.formatDateTime(r.date || r.createdAt, lang)}</td>
                                     <td>${pt ? Utils.sanitize(pt.name) : '-'}</td>
                                     <td><strong>${r.temperature}°C</strong></td>
+                                    <td>${hasHum ? `<strong>${r.humidity}%</strong>` : '—'}</td>
                                     <td>${ok ? 'CONFORME' : 'NO CONFORME'}</td>
                                     <td>${Utils.sanitize(r.responsible || '-')}</td>
                                 </tr>
@@ -387,19 +391,22 @@ const ReportsModule = (function() {
             printContainer.innerHTML = `
                 <div class="print-sheet-header">
                     <div>
-                        <h1>${I18n.t('reports.temperature_report')}</h1>
+                        <h1>${I18n.t('temperature.title')}</h1>
                         <p>${Utils.sanitize((user && user.businessName) || '')} — ${Utils.formatDate(Utils.nowISO(), lang)}</p>
                     </div>
                 </div>
                 <table>
                     <thead>
-                        <tr><th>${I18n.t('app.date')}</th><th>${I18n.t('temperature.control_point')}</th><th>°C</th><th>${I18n.t('app.status')}</th><th>${I18n.t('app.responsible')}</th></tr>
+                        <tr><th>${I18n.t('app.date')}</th><th>${I18n.t('temperature.control_point')}</th><th>°C</th><th>${I18n.t('temperature.humidity')}</th><th>${I18n.t('app.status')}</th><th>${I18n.t('app.responsible')}</th></tr>
                     </thead>
                     <tbody>
                         ${data.tempReadings.map(r => {
                             const pt = data.tempPoints.find(p => p.id === r.pointId);
-                            const ok = pt ? (r.temperature >= pt.minTemp && r.temperature <= pt.maxTemp) : true;
-                            return `<tr><td>${Utils.formatDateTime(r.date, lang)}</td><td>${pt ? Utils.sanitize(pt.name) : '-'}</td><td><strong>${r.temperature}°C</strong></td><td>${ok ? 'OK' : 'DESVIACIÓN'}</td><td>${Utils.sanitize(r.responsible || '-')}</td></tr>`;
+                            const tempOk = pt ? (r.temperature >= pt.minTemp && r.temperature <= pt.maxTemp) : true;
+                            const hasHum = r.humidity !== null && r.humidity !== undefined && r.humidity !== '';
+                            const humOk = (hasHum && pt && pt.trackHumidity) ? (r.humidity >= pt.minHumidity && r.humidity <= pt.maxHumidity) : true;
+                            const ok = tempOk && humOk;
+                            return `<tr><td>${Utils.formatDateTime(r.date || r.createdAt, lang)}</td><td>${pt ? Utils.sanitize(pt.name) : '-'}</td><td><strong>${r.temperature}°C</strong></td><td>${hasHum ? `<strong>${r.humidity}%</strong>` : '—'}</td><td>${ok ? 'OK' : 'DESVIACIÓN'}</td><td>${Utils.sanitize(r.responsible || '-')}</td></tr>`;
                         }).join('')}
                     </tbody>
                 </table>
