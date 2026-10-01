@@ -251,9 +251,11 @@ const ReportsModule = (function() {
                     <tbody>
                         ${data.tempReadings.slice(0, 20).map(r => {
                             const pt = data.tempPoints.find(p => p.id === r.pointId);
-                            const tempOk = pt ? (r.temperature >= pt.minTemp && r.temperature <= pt.maxTemp) : true;
+                            const maxT = pt ? (pt.maxTemp !== undefined && pt.maxTemp !== null ? pt.maxTemp : pt.temperature) : null;
+                            const maxH = pt ? (pt.maxHumidity !== undefined && pt.maxHumidity !== null ? pt.maxHumidity : pt.humidity) : null;
+                            const tempOk = maxT !== null ? (r.temperature <= maxT) : true;
                             const hasHum = r.humidity !== null && r.humidity !== undefined && r.humidity !== '';
-                            const humOk = (hasHum && pt && pt.trackHumidity) ? (r.humidity >= pt.minHumidity && r.humidity <= pt.maxHumidity) : true;
+                            const humOk = (hasHum && pt && pt.trackHumidity && maxH !== null) ? (r.humidity <= maxH) : true;
                             const ok = tempOk && humOk;
                             return `
                                 <tr>
@@ -402,9 +404,11 @@ const ReportsModule = (function() {
                     <tbody>
                         ${data.tempReadings.map(r => {
                             const pt = data.tempPoints.find(p => p.id === r.pointId);
-                            const tempOk = pt ? (r.temperature >= pt.minTemp && r.temperature <= pt.maxTemp) : true;
+                            const maxT = pt ? (pt.maxTemp !== undefined && pt.maxTemp !== null ? pt.maxTemp : pt.temperature) : null;
+                            const maxH = pt ? (pt.maxHumidity !== undefined && pt.maxHumidity !== null ? pt.maxHumidity : pt.humidity) : null;
+                            const tempOk = maxT !== null ? (r.temperature <= maxT) : true;
                             const hasHum = r.humidity !== null && r.humidity !== undefined && r.humidity !== '';
-                            const humOk = (hasHum && pt && pt.trackHumidity) ? (r.humidity >= pt.minHumidity && r.humidity <= pt.maxHumidity) : true;
+                            const humOk = (hasHum && pt && pt.trackHumidity && maxH !== null) ? (r.humidity <= maxH) : true;
                             const ok = tempOk && humOk;
                             return `<tr><td>${Utils.formatDateTime(r.date || r.createdAt, lang)}</td><td>${pt ? Utils.sanitize(pt.name) : '-'}</td><td><strong>${r.temperature}°C</strong></td><td>${hasHum ? `<strong>${r.humidity}%</strong>` : '—'}</td><td>${ok ? 'OK' : 'DESVIACIÓN'}</td><td>${Utils.sanitize(r.responsible || '-')}</td></tr>`;
                         }).join('')}

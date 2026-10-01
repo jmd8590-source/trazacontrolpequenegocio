@@ -210,9 +210,11 @@ const DashboardModule = (function() {
             const point = points.find(p => p.id === reading.pointId);
             if (point) {
                 total++;
-                const tempInRange = reading.temperature >= point.minTemp && reading.temperature <= point.maxTemp;
+                const maxT = point.maxTemp !== undefined && point.maxTemp !== null ? point.maxTemp : point.temperature;
+                const maxH = point.maxHumidity !== undefined && point.maxHumidity !== null ? point.maxHumidity : point.humidity;
+                const tempInRange = maxT !== null ? reading.temperature <= maxT : true;
                 const hasHum = point.trackHumidity && reading.humidity !== null && reading.humidity !== undefined && reading.humidity !== '';
-                const humInRange = hasHum ? (reading.humidity >= point.minHumidity && reading.humidity <= point.maxHumidity) : true;
+                const humInRange = hasHum && maxH !== null ? (reading.humidity <= maxH) : true;
                 if (tempInRange && humInRange) {
                     ok++;
                 }
@@ -260,32 +262,23 @@ const DashboardModule = (function() {
             const readings = tempReadings.filter(r => r.pointId === point.id);
             if (readings.length > 0) {
                 const latest = readings.sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))[0];
-                if (latest.temperature > point.maxTemp) {
+                const maxT = point.maxTemp !== undefined && point.maxTemp !== null ? point.maxTemp : point.temperature;
+                const maxH = point.maxHumidity !== undefined && point.maxHumidity !== null ? point.maxHumidity : point.humidity;
+
+                if (maxT !== null && latest.temperature > maxT) {
                     alerts.push({
                         type: 'danger',
                         icon: '🌡️',
                         text: I18n.t('dashboard.alert_temp_high', { location: point.name })
                     });
-                } else if (latest.temperature < point.minTemp) {
-                    alerts.push({
-                        type: 'warning',
-                        icon: '🌡️',
-                        text: I18n.t('dashboard.alert_temp_low', { location: point.name })
-                    });
                 }
 
                 if (point.trackHumidity && latest.humidity !== null && latest.humidity !== undefined && latest.humidity !== '') {
-                    if (latest.humidity > point.maxHumidity) {
+                    if (maxH !== null && latest.humidity > maxH) {
                         alerts.push({
                             type: 'danger',
                             icon: '💧',
-                            text: `${point.name}: Humedad alta (${latest.humidity}% > ${point.maxHumidity}%)`
-                        });
-                    } else if (latest.humidity < point.minHumidity) {
-                        alerts.push({
-                            type: 'warning',
-                            icon: '💧',
-                            text: `${point.name}: Humedad baja (${latest.humidity}% < ${point.minHumidity}%)`
+                            text: `${point.name}: Humedad alta (${latest.humidity}% > ${maxH}%)`
                         });
                     }
                 }

@@ -7,23 +7,20 @@ const DemoData = (function() {
     'use strict';
 
     async function load(userId) {
-        // 1. Control Points - Temperature
+        // 1. Control Points - Temperature & Humidity
         const p1 = await TrazaDB.create('temperature_points', {
             userId,
             name: 'Cámara Frigorífica Principal (Lácteos y Masas)',
             type: 'cold_room',
-            minTemp: 0.0,
             maxTemp: 4.0,
             trackHumidity: true,
-            minHumidity: 65,
-            maxHumidity: 85
+            maxHumidity: 80
         });
 
         const p2 = await TrazaDB.create('temperature_points', {
             userId,
             name: 'Congelador de Materias Primas',
             type: 'freezer',
-            minTemp: -22.0,
             maxTemp: -18.0,
             trackHumidity: false
         });
@@ -32,7 +29,6 @@ const DemoData = (function() {
             userId,
             name: 'Vitrina Expositora Pastelería',
             type: 'display_fridge',
-            minTemp: 2.0,
             maxTemp: 6.0,
             trackHumidity: false
         });
@@ -41,10 +37,8 @@ const DemoData = (function() {
             userId,
             name: 'Cámara de Fermentación / Secadero',
             type: 'workspace',
-            minTemp: 14.0,
             maxTemp: 18.0,
             trackHumidity: true,
-            minHumidity: 70,
             maxHumidity: 85
         });
 

@@ -49,9 +49,11 @@ const TemperatureModule = (function() {
                             .filter(r => r.pointId === point.id)
                             .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt));
                         const latest = pointReadings[0];
-                        const tempInRange = latest ? (latest.temperature >= point.minTemp && latest.temperature <= point.maxTemp) : null;
+                        const maxT = point.maxTemp !== undefined && point.maxTemp !== null ? point.maxTemp : point.temperature;
+                        const maxH = point.maxHumidity !== undefined && point.maxHumidity !== null ? point.maxHumidity : point.humidity;
+                        const tempInRange = latest ? (maxT !== undefined && maxT !== null ? latest.temperature <= maxT : true) : null;
                         const hasHumidity = point.trackHumidity && latest && latest.humidity !== null && latest.humidity !== undefined && latest.humidity !== '';
-                        const humInRange = hasHumidity ? (latest.humidity >= point.minHumidity && latest.humidity <= point.maxHumidity) : null;
+                        const humInRange = hasHumidity ? (maxH !== undefined && maxH !== null ? latest.humidity <= maxH : true) : null;
                         const allOk = tempInRange === null ? null : (humInRange === null ? tempInRange : tempInRange && humInRange);
                         const statusClass = latest ? (allOk ? 'in-range' : 'out-of-range') : 'no-reading';
 
@@ -72,13 +74,13 @@ const TemperatureModule = (function() {
 
                                     <div class="temp-range mb-2">
                                         <span class="temp-range-indicator ${tempInRange === null ? 'neutral' : tempInRange ? 'ok' : 'warn'}"></span>
-                                        <strong>${I18n.t('temperature.allowed_range')}:</strong> ${point.minTemp}°C ${I18n.t('temperature.range_to')} ${point.maxTemp}°C
+                                        <strong>${I18n.t('temperature.temperature')}:</strong> ≤ ${maxT !== undefined && maxT !== null ? maxT : 4.0}°C
                                     </div>
 
                                     ${point.trackHumidity ? `
                                         <div class="temp-range mb-2">
                                             <span class="temp-range-indicator ${humInRange === null ? 'neutral' : humInRange ? 'ok' : 'warn'}"></span>
-                                            <strong>${I18n.t('temperature.humidity_range')}:</strong> ${point.minHumidity}% ${I18n.t('temperature.range_to')} ${point.maxHumidity}%
+                                            <strong>${I18n.t('temperature.humidity')}:</strong> ≤ ${maxH !== undefined && maxH !== null ? maxH : 70}%
                                         </div>
                                     ` : ''}
 
@@ -133,9 +135,11 @@ const TemperatureModule = (function() {
                                     <tbody>
                                         ${readings.sort((a,b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt)).slice(0, 30).map(r => {
                                             const point = points.find(p => p.id === r.pointId);
-                                            const tempInRange = point ? (r.temperature >= point.minTemp && r.temperature <= point.maxTemp) : true;
+                                            const maxT = point ? (point.maxTemp !== undefined && point.maxTemp !== null ? point.maxTemp : point.temperature) : null;
+                                            const maxH = point ? (point.maxHumidity !== undefined && point.maxHumidity !== null ? point.maxHumidity : point.humidity) : null;
+                                            const tempInRange = maxT !== null ? (r.temperature <= maxT) : true;
                                             const hasHum = r.humidity !== null && r.humidity !== undefined && r.humidity !== '';
-                                            const humInRange = (hasHum && point && point.trackHumidity) ? (r.humidity >= point.minHumidity && r.humidity <= point.maxHumidity) : true;
+                                            const humInRange = (hasHum && point && point.trackHumidity && maxH !== null) ? (r.humidity <= maxH) : true;
                                             const allOk = tempInRange && humInRange;
                                             return `
                                                 <tr>
@@ -151,8 +155,8 @@ const TemperatureModule = (function() {
                                                     </td>
                                                     <td>
                                                         <small class="text-secondary">
-                                                            ${point ? point.minTemp + '°C / ' + point.maxTemp + '°C' : '-'}
-                                                            ${point && point.trackHumidity ? '<br>' + point.minHumidity + '% / ' + point.maxHumidity + '%' : ''}
+                                                            ${maxT !== null ? '≤ ' + maxT + '°C' : '-'}
+                                                            ${point && point.trackHumidity && maxH !== null ? '<br>💧 ≤ ' + maxH + '%' : ''}
                                                         </small>
                                                     </td>
                                                     <td>
@@ -209,30 +213,25 @@ const TemperatureModule = (function() {
                             </div>
                             <div class="form-group">
                                 <label class="form-label">${I18n.t('temperature.point_type')}</label>
-                                <select class="form-select" name="type">
-                                    <option value="cold_room">${I18n.t('temperature.point_types.cold_room')} (0°C a 4°C)</option>
-                                    <option value="freezer">${I18n.t('temperature.point_types.freezer')} (-22°C a -18°C)</option>
-                                    <option value="display_fridge">${I18n.t('temperature.point_types.display_fridge')} (2°C a 6°C)</option>
-                                    <option value="workspace">${I18n.t('temperature.point_types.workspace')} (14°C a 18°C)</option>
+                                <select class="form-select" name="type" id="temp-point-type-select">
+                                    <option value="cold_room">${I18n.t('temperature.point_types.cold_room')} (≤ 4°C)</option>
+                                    <option value="freezer">${I18n.t('temperature.point_types.freezer')} (≤ -18°C)</option>
+                                    <option value="display_fridge">${I18n.t('temperature.point_types.display_fridge')} (≤ 6°C)</option>
+                                    <option value="workspace">${I18n.t('temperature.point_types.workspace')} (≤ 18°C)</option>
                                     <option value="storage">${I18n.t('temperature.point_types.storage')}</option>
                                     <option value="transport">${I18n.t('temperature.point_types.transport')}</option>
                                     <option value="production_area">${I18n.t('temperature.point_types.production_area')}</option>
                                     <option value="other">${I18n.t('temperature.point_types.other')}</option>
                                 </select>
                             </div>
-                            <div class="grid-2">
-                                <div class="form-group">
-                                    <label class="form-label">${I18n.t('temperature.min_temp')} <span class="required">*</span></label>
-                                    <input type="number" step="0.1" class="form-input" name="minTemp" value="0.0" required>
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">${I18n.t('temperature.max_temp')} <span class="required">*</span></label>
-                                    <input type="number" step="0.1" class="form-input" name="maxTemp" value="4.0" required>
-                                </div>
+                            <div class="form-group">
+                                <label class="form-label">🌡️ ${I18n.t('temperature.temperature')} (°C) <span class="required">*</span></label>
+                                <input type="number" step="0.1" class="form-input" name="maxTemp" id="temp-point-maxtemp-input" placeholder="${I18n.t('temperature.temp_placeholder')}" value="4.0" required>
+                                <small class="text-secondary">${I18n.t('temperature.max_temp_help')}</small>
                             </div>
 
                             <!-- Humidity tracking toggle -->
-                            <div class="form-group" style="margin-top: 8px;">
+                            <div class="form-group" style="margin-top: 12px;">
                                 <label class="form-label" style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                                     <input type="checkbox" name="trackHumidity" id="temp-point-track-humidity" style="width: 18px; height: 18px; accent-color: var(--primary);">
                                     <span>💧 ${I18n.t('temperature.track_humidity')}</span>
@@ -240,15 +239,10 @@ const TemperatureModule = (function() {
                                 <small class="text-secondary">${I18n.t('temperature.track_humidity_desc')}</small>
                             </div>
 
-                            <div class="grid-2" id="temp-humidity-range-fields" style="display: none;">
-                                <div class="form-group">
-                                    <label class="form-label">${I18n.t('temperature.min_humidity')} <span class="required">*</span></label>
-                                    <input type="number" step="1" class="form-input" name="minHumidity" value="40" min="0" max="100">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">${I18n.t('temperature.max_humidity')} <span class="required">*</span></label>
-                                    <input type="number" step="1" class="form-input" name="maxHumidity" value="70" min="0" max="100">
-                                </div>
+                            <div class="form-group" id="temp-humidity-range-fields" style="display: none;">
+                                <label class="form-label">💧 ${I18n.t('temperature.humidity')} (%HR) <span class="required">*</span></label>
+                                <input type="number" step="1" class="form-input" name="maxHumidity" placeholder="${I18n.t('temperature.humidity_placeholder')}" value="70" min="0" max="100">
+                                <small class="text-secondary">${I18n.t('temperature.max_humidity_help')}</small>
                             </div>
                         </form>
                     </div>
@@ -348,11 +342,14 @@ const TemperatureModule = (function() {
         }
 
         select.innerHTML = `<option value="">-- ${I18n.t('app.select_option')} --</option>` +
-            points.map(p => `
-                <option value="${p.id}" data-min="${p.minTemp}" data-max="${p.maxTemp}" data-track-humidity="${p.trackHumidity ? '1' : '0'}" ${p.id === preselectedPointId ? 'selected' : ''}>
-                    ${Utils.sanitize(p.name)} (${I18n.t('temperature.range_label')}: ${p.minTemp}°C ${I18n.t('temperature.range_to')} ${p.maxTemp}°C${p.trackHumidity ? ' | 💧' + p.minHumidity + '-' + p.maxHumidity + '%' : ''})
+            points.map(p => {
+                const maxT = p.maxTemp !== undefined && p.maxTemp !== null ? p.maxTemp : p.temperature;
+                const maxH = p.maxHumidity !== undefined && p.maxHumidity !== null ? p.maxHumidity : p.humidity;
+                return `
+                <option value="${p.id}" data-max="${maxT}" data-track-humidity="${p.trackHumidity ? '1' : '0'}" ${p.id === preselectedPointId ? 'selected' : ''}>
+                    ${Utils.sanitize(p.name)} (${I18n.t('temperature.temperature')}: ≤ ${maxT}°C${p.trackHumidity ? ' | 💧 ≤ ' + maxH + '%' : ''})
                 </option>
-            `).join('');
+            `;}).join('');
 
         if (preselectedPointId) {
             select.value = preselectedPointId;
@@ -391,6 +388,17 @@ const TemperatureModule = (function() {
             Utils.openModal('temp-point-modal');
         });
 
+        // Point type change default temperature helper
+        Utils.delegate(document.body, '#temp-point-type-select', 'change', function() {
+            const input = document.getElementById('temp-point-maxtemp-input');
+            if (!input) return;
+            const type = this.value;
+            if (type === 'cold_room') input.value = '4.0';
+            else if (type === 'freezer') input.value = '-18.0';
+            else if (type === 'display_fridge') input.value = '6.0';
+            else if (type === 'workspace') input.value = '18.0';
+        });
+
         // Track humidity checkbox toggle
         Utils.delegate(document.body, '#temp-point-track-humidity', 'change', function() {
             const humFields = document.getElementById('temp-humidity-range-fields');
@@ -405,25 +413,27 @@ const TemperatureModule = (function() {
         // Save Point
         Utils.delegate(document.body, '#temp-point-save', 'click', async () => {
             const data = Utils.getFormData('temp-point-form');
-            if (!data.name || data.minTemp === null || data.maxTemp === null) {
+            if (!data.name || data.maxTemp === null || data.maxTemp === undefined || data.maxTemp === '') {
                 Utils.showToast('error', I18n.t('app.error_required'));
                 return;
             }
+
+            data.maxTemp = parseFloat(data.maxTemp);
+            delete data.minTemp;
 
             // Handle the trackHumidity checkbox - getFormData may return 'on' or boolean
             data.trackHumidity = !!(data.trackHumidity && data.trackHumidity !== 'false' && data.trackHumidity !== '0');
 
             if (data.trackHumidity) {
-                if (data.minHumidity === null || data.maxHumidity === null || data.minHumidity === '' || data.maxHumidity === '') {
+                if (data.maxHumidity === null || data.maxHumidity === undefined || data.maxHumidity === '') {
                     Utils.showToast('error', I18n.t('app.error_required') + ' (' + I18n.t('temperature.humidity') + ')');
                     return;
                 }
-                data.minHumidity = parseFloat(data.minHumidity);
                 data.maxHumidity = parseFloat(data.maxHumidity);
             } else {
-                data.minHumidity = null;
                 data.maxHumidity = null;
             }
+            delete data.minHumidity;
 
             data.userId = Auth.getUserId();
 
@@ -450,7 +460,11 @@ const TemperatureModule = (function() {
             if (point) {
                 editingPointId = point.id;
                 document.getElementById('temp-point-modal-title').textContent = I18n.t('app.edit');
-                Utils.setFormData('temp-point-form', point);
+                Utils.setFormData('temp-point-form', {
+                    ...point,
+                    maxTemp: point.maxTemp !== undefined && point.maxTemp !== null ? point.maxTemp : point.temperature,
+                    maxHumidity: point.maxHumidity !== undefined && point.maxHumidity !== null ? point.maxHumidity : point.humidity
+                });
 
                 // Handle trackHumidity checkbox
                 const checkbox = document.getElementById('temp-point-track-humidity');
@@ -626,18 +640,20 @@ const TemperatureModule = (function() {
         if (titleEl) titleEl.textContent = `${I18n.t('temperature.point_detail')}: ${point.name}`;
 
         if (bodyEl) {
+            const maxT = point.maxTemp !== undefined && point.maxTemp !== null ? point.maxTemp : point.temperature;
+            const maxH = point.maxHumidity !== undefined && point.maxHumidity !== null ? point.maxHumidity : point.humidity;
             const latestReading = pointReadings[0];
-            const latestTempOk = latestReading ? (latestReading.temperature >= point.minTemp && latestReading.temperature <= point.maxTemp) : null;
+            const latestTempOk = latestReading ? (maxT !== null ? latestReading.temperature <= maxT : true) : null;
             const latestHasHum = latestReading && latestReading.humidity !== null && latestReading.humidity !== undefined && latestReading.humidity !== '';
-            const latestHumOk = latestHasHum && point.trackHumidity ? (latestReading.humidity >= point.minHumidity && latestReading.humidity <= point.maxHumidity) : null;
+            const latestHumOk = latestHasHum && point.trackHumidity ? (maxH !== null ? latestReading.humidity <= maxH : true) : null;
 
             bodyEl.innerHTML = `
                 <div class="grid-2 mb-6">
                     <div class="card card-body" style="background: var(--gray-50);">
                         <h5 class="mb-2">${I18n.t('temperature.sanitary_specs')}</h5>
                         <p><strong>${I18n.t('temperature.point_type')}:</strong> ${point.type ? I18n.t('temperature.point_types.' + point.type) : I18n.t('temperature.point_types.other')}</p>
-                        <p><strong>${I18n.t('temperature.allowed_range')}:</strong> <span class="badge badge-primary">${point.minTemp}°C ${I18n.t('temperature.range_to')} ${point.maxTemp}°C</span></p>
-                        ${point.trackHumidity ? `<p><strong>${I18n.t('temperature.humidity_range')}:</strong> <span class="badge badge-info">${point.minHumidity}% ${I18n.t('temperature.range_to')} ${point.maxHumidity}%</span></p>` : ''}
+                        <p><strong>${I18n.t('temperature.temperature')}:</strong> <span class="badge badge-primary">≤ ${maxT !== null ? maxT : 4.0}°C</span></p>
+                        ${point.trackHumidity ? `<p><strong>${I18n.t('temperature.humidity')}:</strong> <span class="badge badge-info">≤ ${maxH !== null ? maxH : 70}%</span></p>` : ''}
                         <p><strong>${I18n.t('temperature.total_readings')}:</strong> ${pointReadings.length}</p>
                     </div>
                     <div class="card card-body text-center" style="background: var(--gray-50);">
@@ -674,9 +690,9 @@ const TemperatureModule = (function() {
                             </thead>
                             <tbody>
                                 ${pointReadings.map(r => {
-                                    const tempOk = r.temperature >= point.minTemp && r.temperature <= point.maxTemp;
+                                    const tempOk = maxT !== null ? r.temperature <= maxT : true;
                                     const rHasHum = r.humidity !== null && r.humidity !== undefined && r.humidity !== '';
-                                    const rHumOk = rHasHum && point.trackHumidity ? (r.humidity >= point.minHumidity && r.humidity <= point.maxHumidity) : true;
+                                    const rHumOk = rHasHum && point.trackHumidity && maxH !== null ? (r.humidity <= maxH) : true;
                                     const allOk = tempOk && rHumOk;
                                     return `
                                         <tr>

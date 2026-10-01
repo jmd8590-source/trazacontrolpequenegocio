@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS public.temperature_points (
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
     type TEXT, -- 'fridge', 'freezer', 'hot_holding', 'room', 'cold_room', 'workspace', 'display_fridge'
-    min_temp NUMERIC NOT NULL,
+    min_temp NUMERIC,
     max_temp NUMERIC NOT NULL,
     track_humidity BOOLEAN DEFAULT FALSE,
     min_humidity NUMERIC,
@@ -141,6 +141,7 @@ ALTER TABLE public.temperature_points ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can manage own temp points" ON public.temperature_points FOR ALL USING (auth.uid() = user_id);
 
 -- Migration safety for existing temperature_points tables
+ALTER TABLE public.temperature_points ALTER COLUMN min_temp DROP NOT NULL;
 ALTER TABLE public.temperature_points ADD COLUMN IF NOT EXISTS track_humidity BOOLEAN DEFAULT FALSE;
 ALTER TABLE public.temperature_points ADD COLUMN IF NOT EXISTS min_humidity NUMERIC;
 ALTER TABLE public.temperature_points ADD COLUMN IF NOT EXISTS max_humidity NUMERIC;
