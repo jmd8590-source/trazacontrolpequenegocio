@@ -52,16 +52,23 @@ const Tour = (function () {
     }
 
     function userKey() {
-        try { return FLAG_DONE_PREFIX + (Auth.getUserId() || 'anon'); } catch (e) { return FLAG_DONE_PREFIX + 'anon'; }
+        try {
+            if (typeof Auth !== 'undefined' && Auth.isDemoMode && Auth.isDemoMode()) {
+                return FLAG_DONE_PREFIX + 'demo';
+            }
+            const uid = (typeof Auth !== 'undefined' && Auth.getUserId && Auth.getUserId()) || 'anon';
+            return FLAG_DONE_PREFIX + uid;
+        } catch (e) {
+            return FLAG_DONE_PREFIX + 'anon';
+        }
     }
 
     function markPending() { try { localStorage.setItem(FLAG_PENDING, '1'); } catch (e) {} }
 
     function maybeStart() {
         try {
-            if (typeof Auth !== 'undefined' && Auth.isDemoMode && Auth.isDemoMode()) return;
-            if (localStorage.getItem(FLAG_PENDING) !== '1') return;
-            if (localStorage.getItem(userKey())) { localStorage.removeItem(FLAG_PENDING); return; }
+            const key = userKey();
+            if (localStorage.getItem(key) === '1') return;
             setTimeout(start, 700);
         } catch (e) {}
     }
@@ -159,7 +166,10 @@ const Tour = (function () {
         overlay = spot = pop = null;
     }
 
-    function replay() { if (!overlay) start(); }
+    function replay() {
+        if (overlay) finish();
+        start();
+    }
 
     return { markPending, maybeStart, start: replay, finish };
 })();

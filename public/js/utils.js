@@ -432,11 +432,16 @@ const Utils = (function() {
     // Si se vuelve a llamar (p.ej. en cada render), reemplaza el anterior en lugar de apilarlo.
     const _delegateRegistry = new WeakMap();
     function delegate(parent, selector, event, handler) {
+        if (typeof event === 'function' && typeof handler === 'undefined') {
+            handler = event;
+            event = 'click';
+        }
+        if (!handler || typeof handler !== 'function') return;
         const el = typeof parent === 'string' ? document.querySelector(parent) : parent;
         if (!el) return;
         let registry = _delegateRegistry.get(el);
         if (!registry) { registry = new Map(); _delegateRegistry.set(el, registry); }
-        const key = event + '|' + selector + '|' + handler.toString();
+        const key = event + '|' + selector + '|' + (handler.name || handler.toString().slice(0, 100));
         const previous = registry.get(key);
         if (previous) el.removeEventListener(event, previous);
         const listener = (e) => {

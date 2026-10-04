@@ -433,6 +433,11 @@ const App = (function() {
         // Theme toggle (Dark / Light Mode)
         Utils.delegate(document.body, '#theme-toggle-btn, #auth-theme-toggle-btn', 'click', toggleTheme);
 
+        // Tour Help Button
+        Utils.delegate(document.body, '#tour-help-btn', 'click', () => {
+            if (typeof Tour !== 'undefined') Tour.start();
+        });
+
         // Logout
         Utils.delegate(document.body, '#logout-btn, #header-logout-btn', 'click', async () => {
             Utils.showConfirm(

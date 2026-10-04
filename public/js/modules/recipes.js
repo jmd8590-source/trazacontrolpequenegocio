@@ -610,7 +610,7 @@ CONSERVACIÓN: ${stg}
         if (eventsInitialized) return;
         eventsInitialized = true;
 
-        Utils.delegate(document.body, '.allergen-item', function(e) {
+        Utils.delegate(document.body, '.allergen-item', 'click', function(e) {
             if (e.target.tagName === 'INPUT') return;
             const cb = this.querySelector('input[type="checkbox"]');
             if (cb) {

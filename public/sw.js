@@ -4,7 +4,7 @@
    slaughterhouses, and production plants without network coverage.
    ============================================================ */
 
-const CACHE_NAME = 'trazacontrol-cache-v20261004-fixes-tour';
+const CACHE_NAME = 'trazacontrol-cache-v20261004-fixes-v3';
 
 const STATIC_ASSETS = [
     './',
