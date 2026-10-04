@@ -1258,20 +1258,115 @@
 }
 
 /* ============================================================
-   Onboarding Tour
+   Onboarding Tour — Interactive System
    ============================================================ */
-.tour-overlay { position: fixed; inset: 0; z-index: 9998; background: transparent; }
-.tour-overlay.tour-dim { background: rgba(8, 12, 24, 0.62); }
-.tour-spot { position: fixed; display: none; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(8, 12, 24, 0.62), 0 0 0 3px var(--primary); transition: all .25s ease; pointer-events: none; }
-.tour-pop { position: fixed; z-index: 9999; background: var(--bg-card, #fff); color: var(--text-primary); border-radius: 14px; padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.35); border: 1px solid var(--border-color, rgba(128,128,128,.25)); animation: tourIn .25s ease; }
-.tour-step { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-.tour-title { margin: 0 0 6px; font-size: 16px; font-weight: 800; }
-.tour-text { margin: 0 0 14px; font-size: 13.5px; line-height: 1.5; color: var(--text-secondary); }
-.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    background: transparent;
+    transition: background 0.3s ease;
+}
+.tour-overlay.tour-dim {
+    background: rgba(8, 12, 24, 0.65);
+    backdrop-filter: blur(2px);
+}
+.tour-spot {
+    position: fixed;
+    display: none;
+    border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(8, 12, 24, 0.68), 0 0 0 3px var(--primary), 0 0 20px rgba(37, 99, 235, 0.5);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+}
+.tour-pop {
+    position: fixed;
+    z-index: 9999;
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary);
+    border-radius: 16px;
+    padding: 22px 24px;
+    box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--border-color, rgba(128, 128, 128, 0.2));
+    border: 1px solid var(--border-color, rgba(128, 128, 128, 0.25));
+    animation: tourIn 0.25s ease-out;
+    max-width: 440px;
+    box-sizing: border-box;
+}
+.tour-progress-bar {
+    height: 4px;
+    background: rgba(128, 128, 128, 0.15);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.tour-progress-fill {
+    height: 100%;
+    background: var(--primary-gradient, var(--primary));
+    transition: width 0.3s ease;
+}
+.tour-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.tour-step {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.tour-title {
+    margin: 0 0 8px;
+    font-size: 16.5px;
+    font-weight: 800;
+    line-height: 1.35;
+    color: var(--text-primary);
+}
+.tour-text {
+    margin: 0 0 18px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+}
+.tour-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
 .tour-spacer { flex: 1; }
-.tour-actions button { border: none; cursor: pointer; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; }
-.tour-next { background: var(--primary); color: #fff; }
-.tour-prev { background: rgba(128,128,128,.15); color: var(--text-primary); }
-.tour-skip { background: transparent; color: var(--text-tertiary); padding-left: 0 !important; }
-@keyframes tourIn { from { opacity: 0; } to { opacity: 1; } }
+.tour-actions button {
+    border: none;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 9px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+.tour-next {
+    background: var(--primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+.tour-next:hover {
+    transform: translateY(-1px);
+}
+.tour-prev {
+    background: rgba(128, 128, 128, 0.12);
+    color: var(--text-primary);
+}
+.tour-prev:hover {
+    background: rgba(128, 128, 128, 0.2);
+}
+.tour-skip {
+    background: transparent;
+    color: var(--text-tertiary);
+    padding-left: 0 !important;
+}
+.tour-skip:hover {
+    color: var(--text-secondary);
+}
+@keyframes tourIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
 
