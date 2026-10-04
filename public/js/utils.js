@@ -428,15 +428,25 @@ const Utils = (function() {
     }
 
     // ---- Event delegation helper ----
+    // Idempotente: cada combinación (elemento, evento, selector, handler) solo registra UN listener.
+    // Si se vuelve a llamar (p.ej. en cada render), reemplaza el anterior en lugar de apilarlo.
+    const _delegateRegistry = new WeakMap();
     function delegate(parent, selector, event, handler) {
         const el = typeof parent === 'string' ? document.querySelector(parent) : parent;
         if (!el) return;
-        el.addEventListener(event, (e) => {
+        let registry = _delegateRegistry.get(el);
+        if (!registry) { registry = new Map(); _delegateRegistry.set(el, registry); }
+        const key = event + '|' + selector + '|' + handler.toString();
+        const previous = registry.get(key);
+        if (previous) el.removeEventListener(event, previous);
+        const listener = (e) => {
             const target = e.target.closest(selector);
             if (target && el.contains(target)) {
                 handler.call(target, e, target);
             }
-        });
+        };
+        registry.set(key, listener);
+        el.addEventListener(event, listener);
     }
 
     // ---- Password Visibility Toggle (Standard type="password" / type="text") ----

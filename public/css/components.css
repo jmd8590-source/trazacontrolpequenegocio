@@ -1256,3 +1256,22 @@
     top: 0;
     z-index: var(--z-sticky);
 }
+
+/* ============================================================
+   Onboarding Tour
+   ============================================================ */
+.tour-overlay { position: fixed; inset: 0; z-index: 9998; background: transparent; }
+.tour-overlay.tour-dim { background: rgba(8, 12, 24, 0.62); }
+.tour-spot { position: fixed; display: none; border-radius: 12px; box-shadow: 0 0 0 9999px rgba(8, 12, 24, 0.62), 0 0 0 3px var(--primary); transition: all .25s ease; pointer-events: none; }
+.tour-pop { position: fixed; z-index: 9999; background: var(--bg-card, #fff); color: var(--text-primary); border-radius: 14px; padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.35); border: 1px solid var(--border-color, rgba(128,128,128,.25)); animation: tourIn .25s ease; }
+.tour-step { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
+.tour-title { margin: 0 0 6px; font-size: 16px; font-weight: 800; }
+.tour-text { margin: 0 0 14px; font-size: 13.5px; line-height: 1.5; color: var(--text-secondary); }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-spacer { flex: 1; }
+.tour-actions button { border: none; cursor: pointer; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; }
+.tour-next { background: var(--primary); color: #fff; }
+.tour-prev { background: rgba(128,128,128,.15); color: var(--text-primary); }
+.tour-skip { background: transparent; color: var(--text-tertiary); padding-left: 0 !important; }
+@keyframes tourIn { from { opacity: 0; } to { opacity: 1; } }
+

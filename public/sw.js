@@ -4,7 +4,7 @@
    slaughterhouses, and production plants without network coverage.
    ============================================================ */
 
-const CACHE_NAME = 'trazacontrol-cache-v20260928-mobile-fix-final';
+const CACHE_NAME = 'trazacontrol-cache-v20261004-fixes-tour';
 
 const STATIC_ASSETS = [
     './',
@@ -25,6 +25,7 @@ const STATIC_ASSETS = [
     './js/utils.js',
     './js/i18n.js',
     './js/auth.js',
+    './js/tour.js',
     './js/demo-data.js',
     './js/modules/dashboard.js',
     './js/modules/traceability.js',

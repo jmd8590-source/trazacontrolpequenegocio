@@ -63,6 +63,25 @@ const App = (function() {
     // Bottom nav items (mobile - most important 5)
     const BOTTOM_NAV_ITEMS = ['dashboard', 'traceability', 'temperature', 'stock', 'more'];
 
+    // Friendly message when the confirmation/recovery link in the email is invalid or expired
+    function handleAuthRedirectErrors() {
+        try {
+            const hash = window.location.hash || '';
+            if (hash.indexOf('error') === -1) return;
+            const params = new URLSearchParams(hash.replace(/^#/, ''));
+            const code = params.get('error_code') || params.get('error');
+            if (!code) return;
+            const msgs = {
+                es: 'El enlace del correo ha caducado o ya se usó. Si ya confirmaste tu cuenta, inicia sesión; si no, vuelve a registrarte o solicita un nuevo enlace.',
+                en: 'The email link has expired or was already used. If you already confirmed your account, sign in; otherwise register again or request a new link.',
+                pt: 'O link do email expirou ou já foi usado. Se já confirmou a conta, inicie sessão; caso contrário, registe-se novamente ou peça um novo link.'
+            };
+            const lang = (typeof I18n !== 'undefined' && I18n.getLang && I18n.getLang()) || 'es';
+            history.replaceState(null, '', window.location.pathname + window.location.search);
+            setTimeout(() => Utils.showToast('error', msgs[lang] || msgs.es), 600);
+        } catch (e) { /* ignore */ }
+    }
+
     // Initialize the application
     async function init() {
         try {
@@ -113,6 +132,9 @@ const App = (function() {
                     console.warn('[App] ServiceWorker registration notice:', err.message);
                 });
             }
+
+            // Handle expired/invalid email confirmation links (#error=...otp_expired)
+            handleAuthRedirectErrors();
 
             // Check auth and show appropriate screen
             if (Auth.isLoggedIn()) {
@@ -197,6 +219,9 @@ const App = (function() {
 
         // Navigate to dashboard
         navigateTo('dashboard');
+
+        // First-time onboarding tour (only right after registration)
+        if (typeof Tour !== 'undefined') Tour.maybeStart();
     }
 
     // Update user info in UI
@@ -545,9 +570,9 @@ const App = (function() {
         } catch (error) {
             console.error('[Login] Rejection details:', error);
             if (error.message === 'email_not_confirmed') {
-                showError('auth.email_not_confirmed', 'Tu correo aún no ha sido confirmado en Supabase.');
+                showError('auth.email_not_confirmed', 'Tu correo aún no ha sido confirmado.');
             } else if (error.message === 'backend_not_configured') {
-                showError('auth.backend_not_configured', 'El servidor de Supabase no está configurado.');
+                showError('auth.backend_not_configured', 'El servidor no está configurado.');
             } else if (error.message.startsWith('rate_limited')) {
                 const seconds = error.message.split(':')[1] || '60';
                 showError('auth.rate_limited', `Demasiados intentos fallidos. Espera ${seconds}s.`, { seconds });
@@ -608,7 +633,7 @@ const App = (function() {
 
         if (submitBtn) {
             submitBtn.disabled = true;
-            submitBtn.innerHTML = `⏳ ${I18n.t('auth.saving_data') || 'Guardando datos en Supabase...'}`;
+            submitBtn.innerHTML = `⏳ ${I18n.t('auth.saving_data') || 'Guardando tus datos...'}`;
         }
 
         try {
@@ -618,10 +643,11 @@ const App = (function() {
                 errorEl.removeAttribute('data-error-key');
             }
 
+            if (typeof Tour !== 'undefined') Tour.markPending();
             if (result && result.requiresConfirmation) {
                 // Supabase requires email verification
                 showAuth('login');
-                Utils.showToast('info', I18n.t('auth.email_not_confirmed') || '¡Registro creado en Supabase! Revisa tu correo.');
+                Utils.showToast('info', I18n.t('auth.email_not_confirmed') || '¡Cuenta creada! Revisa tu correo para confirmarla.');
             } else {
                 // Auto-logged in
                 showApp();

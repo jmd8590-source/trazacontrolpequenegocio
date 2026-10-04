@@ -226,8 +226,8 @@ const TrazaSync = (function() {
             console.log(`[TrazaSync] Successfully synced ${syncedCount} records to cloud!`);
             if (typeof Utils !== 'undefined' && Utils.showToast) {
                 const msg = syncedCount === 1 
-                    ? '1 registro sincronizado con la nube de Supabase' 
-                    : `${syncedCount} registros sincronizados con la nube de Supabase`;
+                    ? '1 registro sincronizado con la nube' 
+                    : `${syncedCount} registros sincronizados con la nube`;
                 Utils.showToast('success', `☁️ ${msg}`);
             }
             notifyListeners('syncComplete', { syncedCount, pendingCount });
@@ -245,7 +245,7 @@ const TrazaSync = (function() {
         if (isSyncing) return;
 
         if (typeof Utils !== 'undefined' && Utils.showToast) {
-            Utils.showToast('info', '🔄 Sincronizando con Supabase...');
+            Utils.showToast('info', '🔄 Sincronizando...');
         }
         await processQueue();
     }

@@ -191,7 +191,7 @@ const DashboardModule = (function() {
     }
 
     function calculateTempOk(readings, points) {
-        if (readings.length === 0) return 100;
+        if (readings.length === 0) return 0;
 
         // Get most recent reading for each point
         const latestByPoint = {};
@@ -221,7 +221,7 @@ const DashboardModule = (function() {
             }
         });
 
-        return total === 0 ? 100 : Math.round((ok / total) * 100);
+        return total === 0 ? 0 : Math.round((ok / total) * 100);
     }
 
     function calculateCompliance(tempReadings, cleaningLogs, waterReadings, incidents) {
@@ -242,16 +242,19 @@ const DashboardModule = (function() {
         const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
         if (waterReadings.some(r => r.date && r.date > weekAgo)) score++;
 
-        // Incidents: no open critical incidents
-        total++;
-        if (!incidents.some(i => i.severity === 'critical' && (i.status === 'open' || i.status === 'in_progress'))) score++;
+        // Incidents: only evaluated once incidents exist (no free points on a fresh account)
+        if (incidents.length > 0) {
+            // Incidents: no open critical incidents
+            total++;
+            if (!incidents.some(i => i.severity === 'critical' && (i.status === 'open' || i.status === 'in_progress'))) score++;
 
-        // Incidents: all resolved
-        total++;
-        const openIncidents = incidents.filter(i => i.status === 'open' || i.status === 'in_progress');
-        if (openIncidents.length === 0) score++;
+            // Incidents: all resolved
+            total++;
+            const openIncidents = incidents.filter(i => i.status === 'open' || i.status === 'in_progress');
+            if (openIncidents.length === 0) score++;
+        }
 
-        return total === 0 ? 100 : Math.round((score / total) * 100);
+        return total === 0 ? 0 : Math.round((score / total) * 100);
     }
 
     function generateAlerts(tempReadings, tempPoints, stockItems, incidents, cleaningLogs) {

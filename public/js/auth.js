@@ -57,6 +57,7 @@ const Auth = (function() {
         // 1. Mandatory Supabase Auth Sign Up
         if (supabase) {
             const signUpOptions = {
+                emailRedirectTo: window.location.origin + window.location.pathname,
                 data: {
                     business_name: businessName,
                     business_type: businessType,
