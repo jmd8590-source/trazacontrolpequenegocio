@@ -56,8 +56,13 @@ const Auth = (function() {
 
         // 1. Mandatory Supabase Auth Sign Up
         if (supabase) {
+            const prodUrl = 'https://trazacontrolpequenegocio.jmd8590.workers.dev/';
+            const emailRedirect = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
+                ? (window.location.origin + window.location.pathname)
+                : prodUrl;
+
             const signUpOptions = {
-                emailRedirectTo: window.location.origin + window.location.pathname,
+                emailRedirectTo: emailRedirect,
                 data: {
                     business_name: businessName,
                     business_type: businessType,
@@ -540,8 +545,13 @@ const Auth = (function() {
             throw new Error('backend_not_configured');
         }
 
+        const prodUrl = 'https://trazacontrolpequenegocio.jmd8590.workers.dev/';
+        const resetRedirect = (typeof window !== 'undefined' && window.location && window.location.origin && window.location.origin.startsWith('http') && !window.location.origin.includes('localhost') && !window.location.origin.includes('127.0.0.1'))
+            ? (window.location.origin + window.location.pathname)
+            : prodUrl;
+
         const options = {
-            redirectTo: window.location.origin + window.location.pathname
+            redirectTo: resetRedirect
         };
 
         const { data, error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, options);
